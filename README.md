@@ -1,6 +1,7 @@
 # **🎬 Motore di Ricerca di Film e Serie TV**
 
 Benvenuto nel progetto di ricerca di film e serie TV, sviluppato come parte del corso di **Gestione dell'Informazione (Information Retrieval)** per l'anno accademico 2024/2025! 
+
 Questo motore di ricerca consente di esplorare una vasta libreria di film e serie TV utilizzando i dati forniti da [**The Movie Database (TMDb)**](https://www.themoviedb.org/). È dotato di tre motori di ricerca, ognuno con due metodi di ranking personalizzati per migliorare l'esperienza di ricerca.
 
 ---
