@@ -3,6 +3,8 @@ import requests
 import json
 from tqdm import tqdm
 
+c = 0
+
 # Configurazione
 API_KEY = "b6a7a4090be318ff17964505db350975"
 BASE_URL = "https://api.themoviedb.org/3"
@@ -35,15 +37,25 @@ def fetch_movie_details(movie_id):
     return response.json()
 
 def extract_relevant_fields(movie_details):
+    global c
     """Estrae solo i campi richiesti dai dettagli di un film."""
+    release_year = movie_details.get("release_date", "")[:4]  # Solo anno
+    description = movie_details.get("overview", "")
+    #Controllo sulla descrizione - se l'anno è 2025
+    if release_year == "2025" and not description:
+        description = "This content is coming soon."
+    elif not description:
+        description = "No description available."
+    #Contatore per l'id
+    c += 1
     return {
-        "id": movie_details.get("id"),
+        "id": str(c),
         "title": movie_details.get("title"),
-        "release_year": movie_details.get("release_date", "")[:4],  # Solo anno
+        "release_year": release_year,
         "genres": [genre["name"] for genre in movie_details.get("genres", [])],
         "average_rating": movie_details.get("vote_average"),
-        "num_votes": movie_details.get("vote_count"),
-        "description": movie_details.get("overview")
+        "description": description,
+        "type": "movie"  # Tipo fisso
     }
 
 def save_movie_as_json(movie):
