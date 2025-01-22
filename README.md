@@ -11,14 +11,14 @@ Questo progetto è un motore di ricerca per film e serie TV basato sui dati forn
   - I dati vengono estratti da TMDb utilizzando la loro API.
 
 - **3 Motori di Ricerca Disponibili**:
-  I. **PostgreSQL**: Utilizza il database relazionale PostgreSQL per l'archiviazione e la ricerca;
-  II. **PyLucene**: Utilizza l'implementazione di Lucene in Python per ricerche full-text;
-  III. **Whoosh**: Utilizza la libreria nativa di Python.
+  1. **PostgreSQL**: Utilizza il database relazionale PostgreSQL per l'archiviazione e la ricerca;
+  2. **PyLucene**: Utilizza l'implementazione di Lucene in Python per ricerche full-text;
+  3. **Whoosh**: Utilizza la libreria nativa di Python.
 
 - **2 Metodi di Ranking per Ogni Motore**:
-  I. **Default Ranking**:
+  1. **Default Ranking**:
      - Il metodo di ranking predefinito del sistema (ad esempio, BM25 per PyLucene e Whoosh).
-  II. **dARR: Dumb Average Rating Ranking**:
+  2. **dARR: Dumb Average Rating Ranking**:
      - Ranking personalizzato basato sulle valutazioni medie (`average_rating`) fornite dagli utenti di TMDb.
 
 ---
