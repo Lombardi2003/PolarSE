@@ -21,14 +21,14 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
   - I dati vengono recuperati direttamente dalla potente API di **TMDb**.
 
 - **🔍 3 Motori di Ricerca Disponibili**:
-  1. **PostgreSQL**: Un potente motore di ricerca basato su un database relazionale, perfetto per ricerche rapide e strutturate.
-  2. **PyLucene**: Un'implementazione di Lucene in Python che consente ricerche full-text avanzate.
-  3. **Whoosh**: Una libreria Python nativa, leggera e facile da usare per ricerche full-text.
+  - **PostgreSQL**: Un potente motore di ricerca basato su un database relazionale, perfetto per ricerche rapide e strutturate.
+  - **PyLucene**: Un'implementazione di Lucene in Python che consente ricerche full-text avanzate.
+  - **Whoosh**: Una libreria Python nativa, leggera e facile da usare per ricerche full-text.
 
 - **📊 2 Metodi di Ranking per Ogni Motore**:
-  1. **Default Ranking**:
+  - **Default Ranking**:
      - Il metodo di ranking predefinito del sistema, che applica algoritmi come **BM25** per **PyLucene** e **Whoosh**, ottimizzando la rilevanza dei risultati.
-  2. **dARR (Dumb Average Rating Ranking)**:
+  - **dARR (Dumb Average Rating Ranking)**:
      - Un metodo personalizzato che ordina i risultati in base alla **valutazione media** (`average_rating`) degli utenti di TMDb, offrendo una classifica dei film/serie più apprezzati.
 
 ---
