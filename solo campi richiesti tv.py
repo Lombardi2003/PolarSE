@@ -3,12 +3,12 @@ import requests
 import json
 from tqdm import tqdm
 
-c = 10000  # Nuovo contatore per evitare conflitto
+c = 10000  # Inizio dell'ID
 
 # Configurazione
-API_KEY = "04878c2cc1d889a587277d56e95fb997" # Chiave della Susi
+API_KEY = "04878c2cc1d889a587277d56e95fb997" #Chiave della Susanna
 BASE_URL = "https://api.themoviedb.org/3"
-SERIES_DIR = "tv_series_dataset_gestione"  # Nuovo nome della cartella
+SERIES_DIR = "series_dataset_gestione"  # Nuovo nome della cartella
 
 # Creazione della directory per salvare i file
 os.makedirs(SERIES_DIR, exist_ok=True)
@@ -39,10 +39,10 @@ def fetch_series_details(series_id):
 def extract_relevant_fields(series_details):
     global c
     """Estrae solo i campi richiesti dai dettagli di una serie TV."""
-    first_air_year = series_details.get("first_air_date", "")[:4]  # Solo anno
+    release_year = series_details.get("first_air_date", "")[:4]  # Solo anno
     description = series_details.get("overview", "")
     # Controllo sulla descrizione - se l'anno è 2025
-    if first_air_year == "2025" and not description:
+    if release_year == "2025" and not description:
         description = "This content is coming soon."
     elif not description:
         description = "No description available."
@@ -51,7 +51,7 @@ def extract_relevant_fields(series_details):
     return {
         "id": str(c),
         "title": series_details.get("name"),
-        "first_air_year": first_air_year,
+        "release_year": release_year,
         "genres": [genre["name"] for genre in series_details.get("genres", [])],
         "average_rating": series_details.get("vote_average"),
         "description": description,
