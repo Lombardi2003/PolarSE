@@ -10,7 +10,7 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 - **Checola Francesca Rosa**
 - **Cocciardi Daniele Silvestro (MATR. 142029 -- 275438@studenti.unimore.it)**
 - **Gnaccarini Susanna**
-- **Lombardi Daniele**
+- **Lombardi Daniele (MATR. 180850 -- 324683@studenti.unimore.it)**
 
 ---
 
