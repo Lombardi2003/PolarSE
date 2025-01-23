@@ -49,7 +49,7 @@ def create_table():
                 CREATE TABLE IF NOT EXISTS movies (
                     id SERIAL PRIMARY KEY,
                     title TEXT,
-                    release_date DATE,
+                    release_year TEXT,      
                     genres TEXT [],
                     average_rating REAL,
                     description TEXT,
@@ -76,23 +76,38 @@ def populate_table(data_folder):
                             data = json.load(f)
                             id = data.get("id")
                             title = data.get("title")
-                            release_date = data.get("release_date")
+                            release_year = data.get("release_year")     #La data di rilascio è una stringa - gestirla come tale
                             genres = data.get("genres", [])  #Recupero la lista dei generi, se non presente metto una lista vuota
                             average_rating = data.get("average_rating")
                             description = data.get("description")
                             type = data.get("type")
 
                             insert_query = """
-                            INSERT INTO movies (id, title, release_date, genres, average_rating, description, type)
+                            INSERT INTO movies (id, title, release_year, genres, average_rating, description, type)
                             VALUES (%s, %s, %s, %s, %s, %s, %s);
                             """
                             #Usa genres come array di stringhe
-                            cursor.execute(insert_query, (id, title, release_date, genres, average_rating, description, type))
+                            cursor.execute(insert_query, (id, title, release_year, genres, average_rating, description, type))
                 print("Popolazione della tabella completata.")
         except Exception as e:
             print(f"Errore nella popolazione della tabella: {e}")
         finally:
             conn.close()
+
+# Recupero dei dati - stampa tutte le righe della tabella (non è efficiente)
+# def fetch_data():
+#    conn = connect_to_db(DB_NAME)
+#    if conn:
+#        try:
+#           with conn.cursor() as cursor:
+#                cursor.execute("SELECT * FROM movies ORDER BY id ASC;")
+#                records = cursor.fetchall()
+#                for record in records:
+#                    print(record)
+#        except Exception as e:
+#            print(f"Errore nel recupero dei dati: {e}")
+#        finally:
+#            conn.close()
 
 if __name__ == "__main__":
     # Percorso alla cartella contenente i file JSON
@@ -102,3 +117,6 @@ if __name__ == "__main__":
     create_database()
     create_table()
     populate_table(data_folder)
+
+    # Recupero e visualizzazione dei dati
+    # fetch_data()
