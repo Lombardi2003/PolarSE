@@ -40,6 +40,7 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 - Librerie Python:
   - `lucene` 🔍
   - `whoosh` 🔍
+  - `NLTK` 🔍
   - `psycopg2` 🗃️
   - `requests` 🌐
   - `tqdm` ⏳
