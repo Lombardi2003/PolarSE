@@ -8,7 +8,7 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 
 ### 🧑‍💻 **Creato da:**
 - **Checola Francesca Rosa**
-- **Cocciardi Daniele**
+- **Cocciardi Daniele Silvestro (MATR. 142029 -- 275438@studenti.unimore.it**
 - **Gnaccarini Susanna**
 - **Lombardi Daniele**
 
