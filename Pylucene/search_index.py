@@ -13,10 +13,7 @@ lucene.initVM(vmargs=['-Djava.awt.headless=true'])
 
 def parse_numeric_query(field, value):
     """
-    Gestisce query numeriche con operatori come >, <, >=, <=.
-    :param field: Campo della query
-    :param value: Valore della query
-    :return: Una query Lucene per il campo numerico
+    Gestisce query numeriche con operatori come >, <, >=, <= e range query [X TO Y].
     """
     max_value = 10 if field == "average_rating" else int(1e9)
     min_value = 0 if field == "average_rating" else int(-1e9)
@@ -29,16 +26,20 @@ def parse_numeric_query(field, value):
         return IntPoint.newRangeQuery(field, min_value, min(max_value, int(value[2:])))
     elif value.startswith("<"):
         return IntPoint.newRangeQuery(field, min_value, min(max_value, int(value[1:]) - 1))
-    else:  # Query esatta
+    elif value.startswith("[") and value.endswith("]") and "TO" in value:
+        # Gestione del range query [X TO Y] perchè non funzionava più
+        try:
+            start, end = map(int, value.strip("[]").split(" TO "))
+            return IntPoint.newRangeQuery(field, start, end)
+        except ValueError:
+            raise ValueError(f"Formato range query non valido: {value}")
+    else:  # Query esatta (non sono stati rimepiti gli altri campi)
         return IntPoint.newExactQuery(field, int(value))
+
 
 def search_index(index_path, query_str, ranking="BM25", limit=10):
     """
     Cerca nell'indice Lucene utilizzando una query multi-campo.
-    :param index_path: Percorso dell'indice
-    :param query_str: Query inserita dall'utente
-    :param ranking: Metodo di ranking ('BM25' o 'average_rating')
-    :param limit: Numero massimo di risultati
     """
     # Apri l'indice
     directory = FSDirectory.open(Paths.get(index_path))
@@ -49,7 +50,7 @@ def search_index(index_path, query_str, ranking="BM25", limit=10):
     analyzer = StandardAnalyzer()
 
     # Campi principali per la ricerca testuale
-    text_fields = ["title", "description", "genres", "type"]
+    text_fields = ["title", "description", "processed_description", "genres", "type"]
 
     # Costruisci manualmente una query booleana
     boolean_query_builder = BooleanQuery.Builder()
@@ -78,7 +79,7 @@ def search_index(index_path, query_str, ranking="BM25", limit=10):
                         BooleanClause.Occur.MUST
                     )
             else:  # Termini generici (senza specificare il campo)
-                for field in text_fields:
+                for field in ["processed_description", "title", "genres"]:  # Preferenza per processed_description ("sistemata" grazie a NLTK)
                     boolean_query_builder.add(
                         TermQuery(Term(field, term.strip().lower())),
                         BooleanClause.Occur.SHOULD
@@ -108,11 +109,11 @@ def search_index(index_path, query_str, ranking="BM25", limit=10):
         print(f"\nRisultati trovati: {len(results)}\n")
         for i, (doc, score) in enumerate(results, start=1):
             result_type = doc.get('type')
-            type_label = "[MOVIE]" if result_type and result_type.lower() == "movie" else "[TV SHOW]"
+            type_label = "[FILM]" if result_type and result_type.lower() == "movie" else "[SERIE TV]"
             print(f"Risultato {i}: {doc.get('title')} {type_label} \n")
             print(f"  Anno di uscita: {doc.get('release_year')}")
             print(f"  Genere: {doc.get('genres')}")
-            print(f"  Descrizione (Inglese): {doc.get('description')}")
+            print(f"  Descrizione EN: {doc.get('description')}")
             if ranking == "average_rating":
                 print(f"  Valutazione media degli utenti: {score}")
             else:
