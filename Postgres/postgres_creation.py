@@ -46,11 +46,11 @@ def create_table():
         try:
             with conn.cursor() as cursor:
                 create_table_query = """
-                CREATE TABLE IF NOT EXISTS movies (
+                CREATE TABLE IF NOT EXISTS dataset (
                     id SERIAL PRIMARY KEY,
                     title TEXT,
                     release_year TEXT,      
-                    genres TEXT [],
+                    genres TEXT [],GIT 
                     average_rating REAL,
                     description TEXT,
                     type TEXT
@@ -83,7 +83,7 @@ def populate_table(data_folder):
                             type = data.get("type")
 
                             insert_query = """
-                            INSERT INTO movies (id, title, release_year, genres, average_rating, description, type)
+                            INSERT INTO dataset (id, title, release_year, genres, average_rating, description, type)
                             VALUES (%s, %s, %s, %s, %s, %s, %s);
                             """
                             #Usa genres come array di stringhe
@@ -111,7 +111,7 @@ def populate_table(data_folder):
 
 if __name__ == "__main__":
     # Percorso alla cartella contenente i file JSON
-    data_folder = "movies_dataset_gestione"
+    data_folder = "Dataset"
 
     # Creazione del database e della tabella, poi popolazione
     create_database()
