@@ -7,10 +7,43 @@ from org.apache.lucene.analysis.standard import StandardAnalyzer
 from org.apache.lucene.index import Term
 from org.apache.lucene.document import IntPoint
 from org.apache.lucene.search.similarities import BM25Similarity, ClassicSimilarity
+from org.apache.lucene.search.spell import SpellChecker
+from org.apache.lucene.search.spell import LuceneDictionary
 from java.nio.file import Paths
 
 # Inizializzo la JVM
 lucene.initVM(vmargs=['-Djava.awt.headless=true'])
+
+def suggest_correction(correct_index_path, query_str):
+    """
+    Suggerisco correzioni per i termini di una query basandomi sull'indice del correttore.
+    """
+    spellchecker_dir = FSDirectory.open(Paths.get(correct_index_path))
+    spellchecker = SpellChecker(spellchecker_dir)
+
+    corrected_query = []
+    terms = query_str.split(" AND ")  # Divido la query in base a "AND"
+
+    for term in terms:
+        if ":" in term:  # Gestisco termini specifici (es. title:nosferatu)
+            field, value = term.split(":", 1)
+            field = field.strip()
+            value = value.strip()
+
+            # Controllo se il termine è errato e suggerisco correzioni
+            if not spellchecker.exist(value):
+                suggestions = spellchecker.suggestSimilar(value, 1)  # Al massimo 1 suggerimento
+                if suggestions:
+                    corrected_query.append(f"{field}:{suggestions[0]}")
+                else:
+                    corrected_query.append(term)
+            else:
+                corrected_query.append(term)
+        else:
+            corrected_query.append(term)  # Termini non specifici di campo
+
+    spellchecker.close()
+    return " AND ".join(corrected_query)
 
 def parse_numeric_query(field, value):
     """
@@ -110,20 +143,28 @@ def search_index(index_path, query_str, ranking="BM25", limit=10):
     finally:
         reader.close()
 
-# Percorso principale dell'indice
-INDEX_PATH = "lucene_index"
+# Percorsi principali
+INDEX_PATH = "lucene_index/userindex"
+SPELLCHECKER_PATH = "lucene_index/correctindex"
 
 if __name__ == "__main__":
     print("\nPuoi cercare su più campi! \n")
     print('  ESEMPIO: title:Sweethearts AND release_year:2024')
     print('           genres:Horror AND description:"vampire romance" AND release_year:[2000 TO 2024] AND average_rating:>8\n')
     search_query = input("\nINSERISCI LA QUERY: ").strip()
+
+    # Suggerisco correzioni per la query
+    corrected_query = suggest_correction(SPELLCHECKER_PATH, search_query)
+    if corrected_query != search_query:
+        print(f"\nHAI CERCATO '{search_query}', MA FORSE INTENDEVI '{corrected_query}'.")
+        confirmation = input("ACCETTI LA CORREZIONE? [s/n]: ").strip().lower()
+        if confirmation == "s":
+            search_query = corrected_query
+
     print("\nSono disponibili 2 metodi di ranking: \n")
     print("  1. BM25 Similarity (Predefinito di PyLucene)")
-    print("  2. TDF-IF (Per confronto con PostgreSQL)\n")
+    print("  2. TF-IDF (Per confronto con PostgreSQL)\n")
     ranking_choice = input("INSERISCI IL NUMERO DEL MODELLO [1/2]: ").strip()
-
-
     ranking_method = "TFIDF" if ranking_choice == "2" else "BM25"
 
     search_index(INDEX_PATH, search_query, ranking=ranking_method)

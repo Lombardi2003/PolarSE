@@ -11,6 +11,9 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
+from org.apache.lucene.search.spell import SpellChecker
+from org.apache.lucene.search.spell import LuceneDictionary
+from org.apache.lucene.index import DirectoryReader
 
 # Inizializzo la JVM per Lucene
 lucene.initVM(vmargs=['-Djava.awt.headless=true'])
@@ -34,19 +37,21 @@ def preprocess_text(text):
     # Tokenizzazione
     tokens = word_tokenize(text.lower())
 
-    # Rimozionw stopwords e stemming
+    # Rimuovo stopwords e applico stemming
     processed_tokens = [stemmer.stem(word) for word in tokens if word.isalpha() and word not in stop_words]
 
     return " ".join(processed_tokens)
 
 def create_index(dataset_path, index_path):
-    # Creo la directory per l'indice
-    index_dir = FSDirectory.open(Paths.get(index_path))
+    # Apro l'indice nella directory specificata per l'utente
+    user_index_path = os.path.join(index_path, "userindex")
+    print(f"Creo l'indice principale nella directory: {user_index_path}")
+    index_dir = FSDirectory.open(Paths.get(user_index_path))
     analyzer = StandardAnalyzer()
     config = IndexWriterConfig(analyzer)
     writer = IndexWriter(index_dir, config)
 
-    # Leggo i file JSON e aggiungili all'indice
+    # Leggo i file JSON e aggiungo i dati all'indice
     json_files = glob(os.path.join(dataset_path, "*.json"))
 
     for file in json_files:
@@ -98,11 +103,36 @@ def create_index(dataset_path, index_path):
 
     # Chiudo il writer per salvare l'indice
     writer.close()
-    print(f"Indice creato nella directory: {index_path}")
+    print(f"Indice principale creato nella directory: {user_index_path}")
 
+def create_spellchecker(index_path):
+    """
+    Creo un indice per il correttore ortografico basato sui termini indicizzati.
+    """
+    # Uso una sottocartella specifica per il correttore
+    correct_index_path = os.path.join(index_path, "correctindex")
+    print(f"Creo l'indice del correttore ortografico nella directory: {correct_index_path}")
+    spell_index_dir = FSDirectory.open(Paths.get(correct_index_path))
+    spellchecker = SpellChecker(spell_index_dir)
+
+    # Uso l'indice principale per costruire il dizionario
+    user_index_path = os.path.join(index_path, "userindex")
+    index_dir = FSDirectory.open(Paths.get(user_index_path))
+    index_reader = DirectoryReader.open(index_dir)
+
+    # Creo il dizionario dal campo "genres" (o altri campi rilevanti)
+    spellchecker.indexDictionary(
+        LuceneDictionary(index_reader, "genres"),
+        IndexWriterConfig(StandardAnalyzer()),
+        False
+    )
+    index_reader.close()
+    spellchecker.close()
+    print(f"Indice del correttore creato nella directory: {correct_index_path}")
 
 DATASET_PATH = "dataset_film_serietv"  # Cartella con i file JSON
-INDEX_PATH = "lucene_index"    # Cartella per salvare l'indice
+INDEX_PATH = "lucene_index"            # Cartella principale per gli indici
 
 if __name__ == "__main__":
     create_index(DATASET_PATH, INDEX_PATH)
+    create_spellchecker(INDEX_PATH)
