@@ -12,12 +12,13 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 
-# Inizializza la JVM per Lucene
+# Inizializzo la JVM per Lucene
 lucene.initVM(vmargs=['-Djava.awt.headless=true'])
 
+# Mi assicuro che NLTK abbia i dati necessari
 nltk.data.path = ['/root/nltk_data']
 
-# Configura NLTK
+# Configuro NLTK
 stop_words = set(stopwords.words('english'))
 stemmer = PorterStemmer()
 
@@ -33,19 +34,19 @@ def preprocess_text(text):
     # Tokenizzazione
     tokens = word_tokenize(text.lower())
 
-    # Rimuovi stopwords e applica stemming
+    # Rimozionw stopwords e stemming
     processed_tokens = [stemmer.stem(word) for word in tokens if word.isalpha() and word not in stop_words]
 
     return " ".join(processed_tokens)
 
 def create_index(dataset_path, index_path):
-    # Crea la directory per l'indice
+    # Creo la directory per l'indice
     index_dir = FSDirectory.open(Paths.get(index_path))
     analyzer = StandardAnalyzer()
     config = IndexWriterConfig(analyzer)
     writer = IndexWriter(index_dir, config)
 
-    # Leggi i file JSON e aggiungili all'indice
+    # Leggo i file JSON e aggiungili all'indice
     json_files = glob(os.path.join(dataset_path, "*.json"))
 
     for file in json_files:
@@ -53,25 +54,25 @@ def create_index(dataset_path, index_path):
             try:
                 data = json.load(f)
 
-                # Crea un documento Lucene per ogni file JSON
+                # Creo un documento Lucene per ogni file JSON
                 doc = Document()
                 doc.add(TextField("title", data.get("title", ""), Field.Store.YES))
 
-                # Indicizza release_year come campo numerico
+                # Indicizzo l'anno di uscita come campo numerico per query
                 release_year = data.get("release_year", None)
                 if release_year:
                     try:
-                        year = int(release_year)  # Converti in intero
+                        year = int(release_year)  # Converto in intero
                         doc.add(IntPoint("release_year", year))  # Campo per query numeriche
                         doc.add(StoredField("release_year", year))  # Campo memorizzato
                     except ValueError:
                         print(f"Valore non valido per release_year nel file {file}: {release_year}")
 
-                # Indicizza average_rating come campo numerico
+                # Indicizzo le valutazioni medie come campo numerico per query
                 average_rating = data.get("average_rating", None)
                 if average_rating is not None:
                     try:
-                        rating = int(float(average_rating))  # Converti in intero
+                        rating = int(float(average_rating))  # Converto in intero
                         doc.add(IntPoint("average_rating", rating))  # Campo per query numeriche
                         doc.add(StoredField("average_rating", rating))  # Campo memorizzato
                     except ValueError:
@@ -83,23 +84,23 @@ def create_index(dataset_path, index_path):
                 description = data.get("description", "")
                 doc.add(TextField("description", description, Field.Store.YES))
 
-                # Campo "processed_description" (preprocessato)
+                # Campo "processed_description" (preprocessato con NLTK)
                 processed_description = preprocess_text(description)
                 doc.add(TextField("processed_description", processed_description, Field.Store.NO))
 
                 doc.add(TextField("type", data["type"], Field.Store.YES))
 
-                # Aggiungi il documento all'indice
+                # Alla fine, aggiungo il documento all'indice
                 writer.addDocument(doc)
 
             except json.JSONDecodeError as e:
                 print(f"Errore nella lettura del file {file}: {e}")
 
-    # Chiudi il writer per salvare l'indice
+    # Chiudo il writer per salvare l'indice
     writer.close()
     print(f"Indice creato nella directory: {index_path}")
 
-# Percorsi principali
+
 DATASET_PATH = "dataset_film_serietv"  # Cartella con i file JSON
 INDEX_PATH = "lucene_index"    # Cartella per salvare l'indice
 
