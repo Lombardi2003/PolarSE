@@ -50,7 +50,15 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 ---
 
 ## 📝 **Istruzioni**
-
+All'avvio, il programma esegue i seguenti passaggi:
+1. **Verifica della presenza del dataset**
+   - Se il dataset è disponibile, procede con l'inizializzazione dei motori di ricerca.
+   - Se il dataset non è presente, lo recupera dalla cartella appropriata.
+   - Se la cartella non esiste, effettua automaticamente il download del dataset.
+2. **Inizializzazione dei motori di ricerca**
+   - Caricamento e configurazione di Postgres, Pylucene e Whoosh.
+3. **Esecuzione delle query**
+   - L'utente può interrogare i dati utilizzando uno dei tre motori di ricerca.
 
 ---
 
