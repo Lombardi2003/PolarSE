@@ -7,7 +7,7 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 ---
 
 ### 🧑‍💻 **Creato da:**
-- **Checola Francesca Rosa (MATR 180957 -- 324595@studenti.unimore.it)**
+- **Checola Francesca Rosa (MATR. 180957 -- 324595@studenti.unimore.it)**
 - **Cocciardi Daniele Silvestro (MATR. 142029 -- 275438@studenti.unimore.it)**
 - **Gnaccarini Susanna (MATR. 184144 -- 326451@studenti.unimore.it)** 
 - **Lombardi Daniele (MATR. 180850 -- 324683@studenti.unimore.it)**
