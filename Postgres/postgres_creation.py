@@ -14,7 +14,7 @@ DB_PORT = "5432"
 def connect_to_db(dbname=None):
     try:
         conn = psycopg2.connect(
-            dbname=dbname or "postgres",
+            dbname=DB_NAME,
             user=DB_USER,
             password=DB_PASSWORD,
             host=DB_HOST,
@@ -50,7 +50,7 @@ def create_table():
                     id SERIAL PRIMARY KEY,
                     title TEXT,
                     release_year TEXT,      
-                    genres TEXT [],GIT 
+                    genres TEXT [],
                     average_rating REAL,
                     description TEXT,
                     type TEXT
