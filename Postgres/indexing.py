@@ -10,10 +10,10 @@ DB_PORT = "5432"
 
 # Creazione degli indici
 def create_indexes():
-    conn = connect_to_db()
+    conn = connect_to_db(DB_NAME)
     if conn:
         try:
-            with conn.cursor() as cursor:
+            with conn.cursor() as cursor:       # Per colonne normali uso indici B-Tree, per colonne di testo o array uso GIN
                 # Indice per ricerca veloce su id
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_id ON dataset (id);")
 
@@ -30,7 +30,7 @@ def create_indexes():
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_average_rating ON dataset (average_rating);")
 
                 # Indice Full-Text Search su description
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_description ON dataset USING GIN(to_tsvector('italian', description));")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_description ON dataset USING GIN(to_tsvector('english', description));")
 
                 print("Indici creati con successo!")
         except Exception as e:
