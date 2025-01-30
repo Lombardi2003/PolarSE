@@ -14,7 +14,7 @@ DB_PORT = "5432"
 def connect_to_db(dbname=None):
     try:
         conn = psycopg2.connect(
-            dbname=DB_NAME,
+            dbname=dbname,
             user=DB_USER,
             password=DB_PASSWORD,
             host=DB_HOST,
