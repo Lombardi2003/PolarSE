@@ -1,133 +1,93 @@
 import psycopg2
 from postgres_creation import connect_to_db
-import re
-import math
 
-# Configurazione del database
 DB_NAME = "movies_series_db"
-DB_USER = "postgres"
-DB_PASSWORD = "postgres"
-DB_HOST = "localhost"
-DB_PORT = "5432"
 
 def parse_query(query):
-    """Analizza la query dell'utente e restituisce la parte full-text e le condizioni numeriche separate."""
+    """Analizza la query e separa la parte full-text dalle condizioni specifiche, gestendo AND e OR."""
     parsed_query = []
-    numeric_conditions = []
-    query_params = []
+    conditions = []
+    full_text_field = None
 
-    terms = query.split(" AND ")
-
+    terms = query.split(" ")
+    current_operator = "&"  # AND di default
+    temp_query = []
+    
     for term in terms:
         term = term.strip()
-        if ":" in term:  # Query con campo specifico
-            field, value = term.split(":", 1)
-            field = field.strip()
-            value = value.strip()
+        if term.upper() == "OR":
+            current_operator = "|"
+        elif term.upper() == "AND":
+            current_operator = "&"
+        else:
+            if ":" in term:
+                field, value = term.split(":", 1)
+                field, value = field.strip(), value.strip()
 
-            # Gestione dei campi numerici con operatori
-            if field == "release_year" or field == "average_rating":  # esempio numerico
-                # Controlla se il valore è vuoto o non valido
-                if value and re.match(r"^[<>]=?\d+$", value):  # Verifica se è un valore numerico valido
-                    if value.startswith(">="):
-                        numeric_conditions.append(f"{field} >= '{value[2:].strip()}'")
-                    elif value.startswith(">"):
-                        numeric_conditions.append(f"{field} > '{value[1:].strip()}'")
-                    elif value.startswith("<="):
-                        numeric_conditions.append(f"{field} <= '{value[2:].strip()}'")
-                    elif value.startswith("<"):
-                        numeric_conditions.append(f"{field} < '{value[1:].strip()}'")
-                    elif value.startswith("[") and value.endswith("]"):  # range
-                        start, end = value[1:].split(' TO ')
-                        numeric_conditions.append(f"{field} BETWEEN '{start}' AND '{end}'")
-                    else:
-                        numeric_conditions.append(f"{field} = '{value}'")
-                else:
-                    print(f"Valore non valido per {field}: {value}. Verrà ignorato.")
-            else:  # Campo testuale
-                parsed_query.append(f"({value})")
-        else:  # Termini generali (senza specificare il campo)
-            parsed_query.append(f"({term})")
+                if field in ["title", "genres", "description"]:
+                    full_text_field = field
+                    temp_query.append(value)
+                elif field in ["release_year", "type"]:
+                    conditions.append(f"{field} = '{value}'")
+            else:
+                temp_query.append(term)
 
-    # Crea la parte della query full-text
-    full_text_query = " & ".join(parsed_query)
+        if temp_query:
+            parsed_query.append(f" {current_operator} ".join(temp_query))
+            temp_query = []
 
-    # Restituisci sia la parte della query full-text che le condizioni numeriche
-    return full_text_query, numeric_conditions
+    full_text_query = " | ".join(parsed_query) if parsed_query else ''
+    return full_text_query, conditions, full_text_field
 
-def calculate_idf(cursor, term, total_documents):
-    """Calcola l'IDF per un dato termine."""
-    query = f"""
-    SELECT COUNT(*) 
-    FROM dataset 
-    WHERE to_tsvector('english', coalesce(title, '')) @@ to_tsquery('english', %s) OR
-          to_tsvector('english', coalesce(release_year, '')) @@ to_tsquery('english', %s) OR
-          to_tsvector('english', array_to_string(genres, ' ')) @@ to_tsquery('english', %s) OR
-          to_tsvector('english', coalesce(description, '')) @@ to_tsquery('english', %s);
-    """
-    cursor.execute(query, (term, term, term, term))
-    doc_count = cursor.fetchone()[0]
-    idf = math.log(total_documents / (doc_count + 1))  # +1 per evitare la divisione per zero
-    return idf
 
-def search_with_tfidf(query):
-    """Esegue una ricerca full-text con TF-IDF su tutti i campi e supporto per query binarie."""
+def search_with_ranking(user_query):
+    """Esegue una ricerca full-text con ranking in PostgreSQL, supportando sia AND che OR."""
     conn = connect_to_db(DB_NAME)
-    if conn:
-        try:
-            with conn.cursor() as cursor:
-                # Elabora la query dell'utente
-                full_text_query, numeric_conditions = parse_query(query)
+    if not conn:
+        print("Errore di connessione al database.")
+        return
+    
+    try:
+        with conn.cursor() as cursor:
+            full_text_query, conditions, full_text_field = parse_query(user_query)
 
-                # Controlla se ci sono condizioni numeriche vuote
-                if any(not condition for condition in numeric_conditions):
-                    raise ValueError("Le condizioni numeriche contengono valori vuoti o non validi!")
-
-                # Conta il numero totale di documenti nel database
-                cursor.execute("SELECT COUNT(*) FROM dataset")
-                total_documents = cursor.fetchone()[0]
-
-                # Calcola il TF per ogni documento e il punteggio IDF per ciascun termine
-                sql_query = f"""
-                SELECT id, title, release_year, genres, description, type, 
-                       ts_rank_cd(
-                           setweight(to_tsvector('english', coalesce(title, '')), 'A') || 
-                           setweight(to_tsvector('english', coalesce(release_year, '')), 'B') || 
-                           setweight(to_tsvector('english', array_to_string(genres, ' ')), 'C') ||
-                           setweight(to_tsvector('english', coalesce(description, '')), 'D'),
-                           to_tsquery('english', %s)
-                       ) AS rank
-                FROM dataset
-                WHERE (
-                    setweight(to_tsvector('english', coalesce(title, '')), 'A') || 
-                    setweight(to_tsvector('english', coalesce(release_year, '')), 'B') || 
-                    setweight(to_tsvector('english', array_to_string(genres, ' ')), 'C') ||
-                    setweight(to_tsvector('english', coalesce(description, '')), 'D')
-                ) @@ to_tsquery('english', %s)
+            if full_text_field:
+                tsvector_query = f"setweight(to_tsvector('english', coalesce({full_text_field}, '')), 'A')"
+            else:
+                tsvector_query = """
+                setweight(to_tsvector('english', coalesce(title, '')), 'A') || 
+                setweight(to_tsvector('english', coalesce(description, '')), 'B') ||
+                setweight(to_tsvector('english', array_to_string(genres, ' ')), 'C')
                 """
 
-                cursor.execute(sql_query, (full_text_query, full_text_query))
-                results = cursor.fetchall()
+            sql_query = f"""
+            SELECT id, title, release_year, genres, description, type, 
+                   ts_rank_cd(
+                       {tsvector_query},
+                       to_tsquery('english', %s)
+                   ) AS rank
+            FROM dataset
+            WHERE {tsvector_query} @@ to_tsquery('english', %s)
+            """
 
-                print("\n🔍 Risultati TF-IDF per la ricerca:", query)
-                for row in results:
-                    rank = row[6]  # Il rank calcolato dal TS-Rank
-                    # Calcola il TF e l'IDF per ogni documento e applica il TF-IDF
-                    terms = full_text_query.split(" & ")
-                    tfidf_score = 0
-                    for term in terms:
-                        term = term.strip()
-                        idf = calculate_idf(cursor, term, total_documents)
-                        tf = rank  # Questo può essere adattato a seconda del TF calcolato per il termine
-                        tfidf_score += tf * idf
+            if conditions:
+                sql_query += " AND " + " AND ".join(conditions)
+            
+            sql_query += " ORDER BY rank DESC LIMIT 10;"
 
-                    print(f"\n🎬 {row[1]} ({row[2]}) - TF-IDF Rank: {tfidf_score:.4f}  -  Type: {row[5]}\n   {row[4]}\n   Genere: {', '.join(row[3])}")
-
-        except Exception as e:
-            print(f"Errore nella ricerca TF-IDF: {e}")
-        finally:
-            conn.close()
+            cursor.execute(sql_query, (full_text_query, full_text_query))
+            results = cursor.fetchall()
+            
+            print("\n🔍 Risultati della ricerca per:", user_query)
+            for row in results:
+                rank_value = row[6] if row[6] is not None else 0.0
+                print(f"\n🎬 {row[1]} ({row[2]}) - Rank: {rank_value:.4f}\n   {row[4]}\n   Genere: {', '.join(row[3])} - Type: {row[5]}")
+    
+    except Exception as e:
+        print(f"❌ Errore nella ricerca: {e}")
+    finally:
+        conn.close()
 
 if __name__ == "__main__":
-    search_query = input("Inserisci il termine di ricerca (usa AND, OR, NOT se necessario): ")
-    search_with_tfidf(search_query)
+    search_query = input("Inserisci la query di ricerca: ")
+    search_with_ranking(search_query)
