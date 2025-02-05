@@ -76,7 +76,7 @@ def populate_table(data_folder):
                             data = json.load(f)
                             id = data.get("id")
                             title = data.get("title")
-                            release_year = data.get("release_year")     #La data di rilascio è una stringa - gestirla come tale
+                            release_year = data.get("release_year")     #La data di rilascio è una stringa - gestirla come intero
                             genres_list = data.get("genres", [])  #Recupero la lista dei generi, se non presente metto una lista vuota
                             genres = ", ".join(genres_list)  # Concateno i generi in una stringa
                             average_rating = data.get("average_rating")
