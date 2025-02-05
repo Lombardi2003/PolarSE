@@ -1,6 +1,6 @@
 from whoosh import index
 from whoosh.qparser import MultifieldParser, AndGroup
-from whoosh.query import NumericRange, FuzzyTerm
+from whoosh.query import NumericRange, FuzzyTerm, Or
 from whoosh.scoring import BM25F, TF_IDF
 import yaml
 
@@ -15,61 +15,29 @@ class IRModel:
 
     # Ricerca nel modello 
     def search(self, query: str, resLimit=10, fuzzy=False):
-
-        # PARSING DELLA QUERY
-        # definizione dei campi sui quali effettuare le ricerche
+    # Definizione dei campi su cui cercare
         fields = ["title", "genres", "release_year", "average_rating", "type", "id", "processed_description"]
-       
-        # configurazione del parser 
+        
+        # Configura il parser con il supporto delle query AND di default
         parser = MultifieldParser(fields, schema=self.index.schema, group=AndGroup)
-
-        # CONTROLLO RANGE QUERY 
-        # con operatori: controllo di inserimento per operatori <, >, <=, >=
-        operators = [">=", "<=", ">", "<"]
-        for op in operators:
-            if op in query:
-                field, value = query.split(":", 1)  # divide il campo in 2
-                value = value.strip()  # rimuove spazi se presenti
-                operator_pos = value.find(op)
-                if operator_pos != -1:
-                    op_value = float(value[operator_pos + len(op):])  
-                    if field in ["release_year", "average_rating"]: # conversione della query in una RangeQuery
-                        if op == ">":
-                            parsed_query = NumericRange(field, op_value, None, startexcl=True)
-                        elif op == ">=":
-                            parsed_query = NumericRange(field, op_value, None, startexcl=False)
-                        elif op == "<":
-                            parsed_query = NumericRange(field, None, op_value, endexcl=True)
-                        elif op == "<=":
-                            parsed_query = NumericRange(field, None, op_value, endexcl=False)
-                    else:
-                        print(f"Campo {field} non valido per operatori numerici.")
-                    break
+        
+        # Se è attiva la fuzzy search, modifica la query per usare la fuzzy logic sui termini
+        if fuzzy:
+            if ":" in query:
+                field, term = query.split(":", 1)
+                term = term.strip()
+                parsed_query = FuzzyTerm(field, term, maxdist=2)
+            else:
+                parsed_query = Or([FuzzyTerm("title", query, maxdist=2), FuzzyTerm("description", query, maxdist=2)])
         else:
+            # Usa direttamente il parser Whoosh, che gestisce anche i range numerici
+            parsed_query = parser.parse(query)
 
-            # con intervallo: gestione di intervallo aperto e chiuso
-            if "[" in query and "]" in query: # significa che c'è un intervallo
-                field, range_values = query.split(":", 1)
-                range_values = range_values.strip("[]").split(" TO ")
-                start_value = float(range_values[0]) if range_values[0] else None #gestisce gli intervalli aperti
-                end_value = float(range_values[1]) if range_values[1] else None #gestisce gli intervalli aperti
-                parsed_query = NumericRange(field, start_value, end_value) # creazione della RangeQuery
-           
-            else: # (se non ci sono RangeQuery) verifica se c'è una richiesta fuzzy (fuzzy=True)
-                
-                if fuzzy: # esegue la fuzzy
-                    field, term = query.split(":", 1)
-                    term = term.strip()
-                    parsed_query = FuzzyTerm(field, term, maxdist=2)  
-               
-                else: # non esegue la fuzzy
-                    parsed_query = parser.parse(query)
-
-        # Creazione del searcher 
+        # Creazione del searcher
         searcher = self.index.searcher(weighting=self.model)
         results = searcher.search(parsed_query, limit=resLimit)
 
-        # Op. di debugging: visualizza la query finale eseguita
+        # Debug: stampa la query finale eseguita
         print(f"Query finale eseguita: {parsed_query}")
 
         # Mette i risultati in un dizionario
@@ -117,8 +85,12 @@ if __name__ == '__main__':
     # input della query
     user_query = input("Inserisci la query di ricerca: ")
 
-    # se la query è di tipo title, description, chiede se voglio effettuare la fuzzy
-    if user_query.startswith("title:") or user_query.startswith("description:"):
+    # se la query è di tipo title, description, o senza campi, chiede se voglio effettuare la fuzzy
+    if not any(field in user_query for field in ["title:", "description:", "genres:", "release_year:", "average_rating:", "type:", "id:", "processed_description:"]):
+        print("Non hai specificato i campi. Vuoi eseguire una ricerca fuzzy nei campi 'title' e 'description'? (s/n)")
+        fuzzy_choice = input("Inserisci 's' per sì, 'n' per no: ").lower()
+        fuzzy_search = fuzzy_choice == 's'
+    elif user_query.startswith("title:") or user_query.startswith("description:"):
         print("Vuoi eseguire una ricerca fuzzy? (s/n)")
         fuzzy_choice = input("Inserisci 's' per sì, 'n' per no: ").lower()
         fuzzy_search = fuzzy_choice == 's'
