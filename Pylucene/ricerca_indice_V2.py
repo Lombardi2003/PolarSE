@@ -4,18 +4,19 @@ from java.nio.file import Paths
 from org.apache.lucene.analysis.standard import StandardAnalyzer
 from org.apache.lucene.store import FSDirectory
 from org.apache.lucene.index import DirectoryReader
-from org.apache.lucene.search import IndexSearcher, BooleanQuery, BooleanClause
+from org.apache.lucene.search import IndexSearcher, BooleanQuery, BooleanClause, TermQuery
+from org.apache.lucene.index import Term
+from org.apache.lucene.document import IntPoint
 from org.apache.lucene.queryparser.classic import QueryParser
 from org.apache.lucene.search.similarities import BM25Similarity, ClassicSimilarity
-from org.apache.lucene.search.spell import SpellChecker
-from org.apache.lucene.search.spell import LuceneDictionary
+from org.apache.lucene.search.spell import SpellChecker, LuceneDictionary
 
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 
-# Inizializzo Lucene e NLTK
+# Inizializza Lucene e NLTK
 lucene.initVM(vmargs=['-Djava.awt.headless=true'])
 nltk.data.path = ['/root/nltk_data']
 stop_words = set(stopwords.words('english'))
@@ -29,97 +30,89 @@ def preprocess_query(query):
     processed_tokens = [stemmer.stem(word) for word in tokens if word.isalpha() and word not in stop_words]
     return " ".join(processed_tokens)
 
-def suggest_correction(base_index_path, query_str):
+def parse_numeric_query(field, value):
     """
-    Suggerisce correzioni ortografiche per ogni termine della query utilizzando l'indice del correttore.
-    
-    Viene costruito il percorso per il correttore a partire dalla directory base.
+    Gestisce query numeriche con operatori <, >, <=, >= per release_year e average_rating.
     """
-    spellchecker_path = os.path.join(base_index_path, "correctindex")
-    spell_index_dir = FSDirectory.open(Paths.get(spellchecker_path))
-    spellchecker = SpellChecker(spell_index_dir)
-
-    corrected_query_parts = []
-    # Suddivido la query in token (in questo esempio una semplice suddivisione per spazio)
-    query_tokens = query_str.split(" ")
-
-    for token in query_tokens:
-        if ":" in token:  # Caso in cui si specifichi il campo (es. "title:famuly")
-            field, value = token.split(":", 1)
-            field = field.strip()
-            value = value.strip()
-            suggestions = spellchecker.suggestSimilar(value, 1)  # Propongo una sola correzione
-            # Se c'è una correzione (diversa dal termine attuale), la uso; altrimenti lascio il termine originale
-            corrected_value = suggestions[0] if suggestions and suggestions[0].lower() != value.lower() else value
-            corrected_query_parts.append(f"{field}:{corrected_value}")
-        else:
-            # Caso in cui il token non specifichi un campo
-            suggestions = spellchecker.suggestSimilar(token.strip(), 1)
-            corrected_query_parts.append(suggestions[0] if suggestions and suggestions[0].lower() != token.lower() else token)
-
-    spellchecker.close()
-    return " ".join(corrected_query_parts)
+    try:
+        if value.startswith(">="):
+            return IntPoint.newRangeQuery(field, int(value[2:]), int(1e9))
+        elif value.startswith(">"):
+            return IntPoint.newRangeQuery(field, int(value[1:]) + 1, int(1e9))
+        elif value.startswith("<="):
+            return IntPoint.newRangeQuery(field, int(-1e9), int(value[2:]))
+        elif value.startswith("<"):
+            return IntPoint.newRangeQuery(field, int(-1e9), int(value[1:]) - 1)
+        else:  # Query esatta
+            return IntPoint.newExactQuery(field, int(value))
+    except ValueError:
+        return None
 
 def search_index(query_str, base_index_path, ranking_method):
     """
     Esegue la ricerca nell'indice, corregge la query se necessario e applica il ranking scelto.
-    
-    Parametri:
-      - query_str: query inserita dall'utente.
-      - base_index_path: directory base degli indici (es. "lucene_index").
-      - ranking_method: "1" per BM25 o "2" per TF-IDF (ClassicSimilarity).
     """
-    # 1. Correzione ortografica
-    corrected_query = suggest_correction(base_index_path, query_str)
-    
-    if corrected_query != query_str:
-        print(f"\nQUERY ORIGINALE: {query_str}")
-        print(f"Did you mean... {corrected_query}?")
-        confirmation = input("Vuoi cercare con la query corretta? [y/n]: ").strip().lower()
-        if confirmation == "y":
-            query_str = corrected_query
-
-    # 2. Apro l'indice principale (userindex)
     user_index_path = os.path.join(base_index_path, "userindex")
     index_dir = FSDirectory.open(Paths.get(user_index_path))
     searcher = IndexSearcher(DirectoryReader.open(index_dir))
-    
-    # Imposto il ranking in base alla scelta
+
     if ranking_method == "2":
         searcher.setSimilarity(ClassicSimilarity())
     else:
         searcher.setSimilarity(BM25Similarity())
-    
+
     analyzer = StandardAnalyzer()
 
-    # 3. Costruisco la query: se non specifica un campo, applico il preprocessamento e cerco su più campi
-    if ":" not in query_str:
-        print("\nLa query non specifica un campo. Applicando il preprocessamento con NLTK...\n")
-        query_str = preprocess_query(query_str)
-        fields = ["processed_description", "title", "genres"]
-        boolean_query_builder = BooleanQuery.Builder()
-        for field in fields:
+    # Costruisco la query finale
+    boolean_query_builder = BooleanQuery.Builder()
+    query_tokens = query_str.split(" AND ")
+
+    # PRIMA: Aggiungo filtri numerici (FILTRANO I RISULTATI)
+    numeric_queries = []
+    text_queries = []
+
+    for token in query_tokens:
+        if ":" in token:
+            field, value = token.split(":", 1)
+            field, value = field.strip(), value.strip()
+
+            if field in ["release_year", "average_rating"]:
+                numeric_query = parse_numeric_query(field, value)
+                if numeric_query:
+                    numeric_queries.append(numeric_query)  # Aggiunge al filtro
+            else:
+                text_queries.append((field, value))
+        else:
+            text_queries.append(("default", token))  # Termini senza campo
+
+    # CREO UN SOTTO-GRUPPO DI QUERY TESTUALI PER EVITARE L'OR ERRATO
+    text_query_builder = BooleanQuery.Builder()
+
+    # Aggiungo le query testuali (CERCANO I TERMINI)
+    for field, value in text_queries:
+        if field == "default":  # Termini senza campo specifico
+            for search_field in ["processed_description", "title", "genres"]:
+                parser = QueryParser(search_field, analyzer)
+                field_query = parser.parse(value)
+                text_query_builder.add(field_query, BooleanClause.Occur.SHOULD)
+        else:
             parser = QueryParser(field, analyzer)
-            field_query = parser.parse(query_str)
-            boolean_query_builder.add(field_query, BooleanClause.Occur.SHOULD)
-        final_query = boolean_query_builder.build()
-    else:
-        # Se la query specifica i campi, uso un parser sul campo di default (ad es. processed_description)
-        parser = QueryParser("processed_description", analyzer)
-        final_query = parser.parse(query_str)
+            field_query = parser.parse(value)
+            text_query_builder.add(field_query, BooleanClause.Occur.SHOULD)
+
+    # APPLICO I FILTRI NUMERICI PRIMA DELLE QUERY TESTUALI
+    for nq in numeric_queries:
+        boolean_query_builder.add(nq, BooleanClause.Occur.FILTER)
+
+    # ORA AGGIUNGO LE QUERY TESTUALI COME UN BLOCCO UNICO
+    boolean_query_builder.add(text_query_builder.build(), BooleanClause.Occur.MUST)
+
+    final_query = boolean_query_builder.build()
 
     print(f"Eseguendo parsing della query: {query_str}")
     print(f"Query costruita: {final_query}")
 
-    # 4. Eseguo la ricerca
     hits = searcher.search(final_query, 10).scoreDocs
-
-    # Se non ci sono risultati, provo a cercare sul campo "description" (non preprocessato)
-    if not hits:
-        print("\nNessun risultato trovato. Provo con il campo 'description' invece di 'processed_description'...\n")
-        parser = QueryParser("description", analyzer)
-        fallback_query = parser.parse(query_str)
-        hits = searcher.search(fallback_query, 10).scoreDocs
 
     print(f"\nRisultati trovati: {len(hits)}\n")
     for i, hit in enumerate(hits, start=1):
@@ -140,17 +133,18 @@ def search_index(query_str, base_index_path, ranking_method):
         print("-" * 40)
 
 if __name__ == "__main__":
-    # Directory base degli indici: qui vengono creati "userindex" e "correctindex"
     BASE_INDEX_PATH = "lucene_index"
 
     print("\nPuoi cercare con field specifici o solamente con keyword!")
-    print("\n--- ESEMPIO CON FIELD: title:famuly AND genres:hortor")
+    print("\n--- ESEMPIO CON FIELD: title:nosferatu AND release_year:2024")
     print("--- ESEMPIO SENZA FIELD: nosferatu drama")
+
     query = input("\nINSERISCI LA QUERY: ")
     
     print("\nSono disponibili 2 metodi di ranking:")
     print("  1. BM25 Similarity (Predefinito di PyLucene)")
     print("  2. TF-IDF (ClassicSimilarity)")
+
     ranking_choice = input("\nINSERISCI IL NUMERO DEL MODELLO [1/2]: ")
     
     search_index(query, BASE_INDEX_PATH, ranking_choice)
