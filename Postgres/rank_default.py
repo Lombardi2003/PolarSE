@@ -21,23 +21,14 @@ def parse_query(query):
             current_operator = "&"
         else:
             # Controlla se la query contiene un operatore per release_year
-            if "release_year" in term:
-                # Estrae l'operatore e il valore per release_year
-                for op in [">=", "<=", ">", "<", "="]:
-                    if op in term:
-                        field, value = term.split(op, 1)
-                        field, value = field.strip(), value.strip()
-                        conditions.append(f"{field} {op} {value}")
-                        break
-            elif ":" in term:
+            if ":" in term:
                 field, value = term.split(":", 1)
                 field, value = field.strip(), value.strip()
 
-                if field in ["title", "genres", "description"]:
+                if field in ["title", "genres", "description", "type"]:
                     full_text_field = field
                     temp_query.append(value)
-                elif field == "type":
-                    conditions.append(f"{field} = '{value}'")
+
             else:
                 temp_query.append(term)
 
@@ -66,7 +57,7 @@ def search_with_ranking(user_query):
                 tsvector_query = """
                 setweight(to_tsvector('english', coalesce(title, '')), 'A') || 
                 setweight(to_tsvector('english', coalesce(description, '')), 'B') ||
-                setweight(to_tsvector('english', array_to_string(genres, ' ')), 'C')
+                setweight(to_tsvector('english', coalesce(genres, ' ')), 'C')
                 """
 
             sql_query = f"""
@@ -90,7 +81,7 @@ def search_with_ranking(user_query):
             print("\n🔍 Risultati della ricerca per:", user_query)
             for row in results:
                 rank_value = row[6] if row[6] is not None else 0.0
-                print(f"\n🎬 {row[1]} ({row[2]}) - Rank: {rank_value:.4f}\n   {row[4]}\n   Genere: {', '.join(row[3])} - Type: {row[5]}")
+                print(f"\n🎬 {row[1]} ({row[2]})\n   {row[4]}\n   Genere: {row[3]} - Type: {row[5]}")
     
     except Exception as e:
         print(f"❌ Errore nella ricerca: {e}")
