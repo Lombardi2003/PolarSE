@@ -4,7 +4,7 @@ from postgres_creation import connect_to_db
 DB_NAME = "movies_series_db"
 
 def parse_query(query):
-    """Analizza la query e separa la parte full-text dalle condizioni specifiche, gestendo AND e OR."""
+    """Analizza la query e separa la parte full-text dalle condizioni specifiche, gestendo AND, OR e operatori di confronto su release_year."""
     parsed_query = []
     conditions = []
     full_text_field = None
@@ -12,7 +12,7 @@ def parse_query(query):
     terms = query.split(" ")
     current_operator = "&"  # AND di default
     temp_query = []
-    
+
     for term in terms:
         term = term.strip()
         if term.upper() == "OR":
@@ -20,14 +20,23 @@ def parse_query(query):
         elif term.upper() == "AND":
             current_operator = "&"
         else:
-            if ":" in term:
+            # Controlla se la query contiene un operatore per release_year
+            if "release_year" in term:
+                # Estrae l'operatore e il valore per release_year
+                for op in [">=", "<=", ">", "<", "="]:
+                    if op in term:
+                        field, value = term.split(op, 1)
+                        field, value = field.strip(), value.strip()
+                        conditions.append(f"{field} {op} {value}")
+                        break
+            elif ":" in term:
                 field, value = term.split(":", 1)
                 field, value = field.strip(), value.strip()
 
                 if field in ["title", "genres", "description"]:
                     full_text_field = field
                     temp_query.append(value)
-                elif field in ["release_year", "type"]:
+                elif field == "type":
                     conditions.append(f"{field} = '{value}'")
             else:
                 temp_query.append(term)
@@ -41,7 +50,7 @@ def parse_query(query):
 
 
 def search_with_ranking(user_query):
-    """Esegue una ricerca full-text con ranking in PostgreSQL, supportando sia AND che OR."""
+    """Esegue una ricerca full-text con ranking in PostgreSQL, supportando sia AND che OR e operatori di confronto su release_year."""
     conn = connect_to_db(DB_NAME)
     if not conn:
         print("Errore di connessione al database.")
