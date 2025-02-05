@@ -35,51 +35,63 @@ def preprocess_query(query):
     return " & ".join(filtered_tokens)
 
 def parse_query(query):
-    """ Analizza la query e genera condizioni SQL """
-    parsed_query = []
-    numeric_conditions = []
+    """ Analizza la query e genera condizioni SQL con gestione di AND e OR """
+    conditions = []
     query_params = []
-    terms = re.split(r" AND | OR ", query)
 
-    for term in terms:
-        term = term.strip()
-        if ":" in term:
-            field, value = term.split(":", 1)
-            field, value = field.strip(), value.strip()
+    # Tokenizza in base a " AND " e " OR " preservando gli operatori
+    tokens = re.split(r"( AND | OR )", query)
+    current_clause = []
+    last_operator = "AND"  # Operatore di default
 
-            if field == "release_year" or field == "average_rating":
-                # Gestione del confronto numerico
-                match = re.match(r"([<>]=?)\s*(\d+(\.\d+)?)", value)
-                if match:
-                    operator, num_value, _ = match.groups()
-                    numeric_conditions.append(f"{field} {operator} %s")
-                    query_params.append(float(num_value) if field == "average_rating" else int(num_value))
-                else:
-                    # Gestione dell'uguaglianza
-                    try:
-                        num_value = float(value) if field == "average_rating" else int(value)
-                        numeric_conditions.append(f"{field} = %s")
-                        query_params.append(num_value)
-                    except ValueError:
-                        print(f"❌ Errore: il valore '{value}' per '{field}' non è valido.")
-
-            elif field == "title":
-                parsed_query.append("LOWER(title) ILIKE LOWER(%s)")
-                query_params.append(f"%{value}%")
-            else:
-                parsed_query.append(f"to_tsvector('english', coalesce({field}, '')) @@ to_tsquery('english', %s)")
-                query_params.append(preprocess_query(value))
+    for token in tokens:
+        token = token.strip()
+        
+        if token in {"AND", "OR"}:
+            # Se è un operatore, salviamo la condizione accumulata e impostiamo l'operatore
+            if current_clause:
+                conditions.append(f" ({' AND '.join(current_clause)}) ")
+                current_clause = []
+            last_operator = token
         else:
-            term_processed = preprocess_query(term)
-            parsed_query.append(f"(to_tsvector('english', coalesce(title, '')) @@ to_tsquery('english', %s) OR "
-                                f"to_tsvector('english', coalesce(description, '')) @@ to_tsquery('english', %s))")
-            query_params.extend([term_processed] * 2)
+            # Analizza il termine della query
+            if ":" in token:
+                field, value = token.split(":", 1)
+                field, value = field.strip(), value.strip()
 
-    conditions = " AND ".join(parsed_query)
-    if numeric_conditions:
-        conditions += " AND " + " AND ".join(numeric_conditions)
+                if field in {"release_year", "average_rating"}:
+                    match = re.match(r"([<>]=?)\s*(\d+(\.\d+)?)", value)
+                    if match:
+                        operator, num_value, _ = match.groups()
+                        current_clause.append(f"{field} {operator} %s")
+                        query_params.append(float(num_value) if field == "average_rating" else int(num_value))
+                    else:
+                        try:
+                            num_value = float(value) if field == "average_rating" else int(value)
+                            current_clause.append(f"{field} = %s")
+                            query_params.append(num_value)
+                        except ValueError:
+                            print(f"❌ Errore: valore '{value}' non valido per '{field}'")
+                elif field == "title":
+                    current_clause.append("LOWER(title) ILIKE LOWER(%s)")
+                    query_params.append(f"%{value}%")
+                else:
+                    current_clause.append(f"to_tsvector('english', coalesce({field}, '')) @@ to_tsquery('english', %s)")
+                    query_params.append(preprocess_query(value))
+            else:
+                term_processed = preprocess_query(token)
+                current_clause.append(f"(to_tsvector('english', coalesce(title, '')) @@ to_tsquery('english', %s) OR "
+                                      f"to_tsvector('english', coalesce(description, '')) @@ to_tsquery('english', %s))")
+                query_params.extend([term_processed] * 2)
 
-    return conditions, query_params
+    # Aggiunge l'ultima clausola
+    if current_clause:
+        conditions.append(f" ({' AND '.join(current_clause)}) ")
+
+    # Combina tutte le condizioni rispettando gli operatori AND/OR
+    final_conditions = f" {last_operator} ".join(conditions)
+
+    return final_conditions, query_params
 
 def search_with_bm25(query):
     """ Esegue la ricerca nel database con BM25 """
@@ -121,7 +133,7 @@ def search_with_bm25(query):
                 JOIN doc_lengths ON d.id = doc_lengths.id
                 CROSS JOIN avg_length
                 WHERE {conditions}
-                ORDER BY bm25_rank DESC NULLS LAST, d.average_rating DESC
+                ORDER BY bm25_rank DESC NULLS LAST, d.id
                 LIMIT 10;
                 """
                 
@@ -140,7 +152,7 @@ def search_with_bm25(query):
                 else:
                     print("\n🔍 Risultati BM25 per la ricerca:", query)
                     for row in results:
-                        print(f"\n🎬 {row[1]} ({row[2]}) - Type: {row[5]} - ⭐ {row[6]}\n   {row[4]}\n   Genere: {row[3]}")
+                        print(f"\n🎬 {row[1]} ({row[2]}) - Type: {row[5]} - ⭐ Average Rating:  {row[6]}\n   {row[4]}\n   Genere: {row[3]}")
         
         except Exception as e:
             print(f"❌ Errore nella ricerca BM25: {e}")
