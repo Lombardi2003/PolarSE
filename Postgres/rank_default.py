@@ -80,8 +80,7 @@ def search_with_ranking(user_query):
             
             print("\n🔍 Risultati della ricerca per:", user_query)
             for row in results:
-                rank_value = row[6] if row[6] is not None else 0.0
-                print(f"\n🎬 {row[1]} ({row[2]})\n   {row[4]}\n   Genere: {row[3]} - Type: {row[5]}")
+                print(f"\n🎬 {row[1]} ({row[2]})\n {row[4]}\n   Genere: {row[3]} - Type: {row[5]}")
     
     except Exception as e:
         print(f"❌ Errore nella ricerca: {e}")
