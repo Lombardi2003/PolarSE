@@ -49,8 +49,8 @@ def create_table():
                 CREATE TABLE IF NOT EXISTS dataset (
                     id SERIAL PRIMARY KEY,
                     title TEXT,
-                    release_year TEXT,      
-                    genres TEXT [],
+                    release_year INTEGER,      
+                    genres TEXT,
                     average_rating REAL,
                     description TEXT,
                     type TEXT
@@ -77,7 +77,8 @@ def populate_table(data_folder):
                             id = data.get("id")
                             title = data.get("title")
                             release_year = data.get("release_year")     #La data di rilascio è una stringa - gestirla come tale
-                            genres = data.get("genres", [])  #Recupero la lista dei generi, se non presente metto una lista vuota
+                            genres_list = data.get("genres", [])  #Recupero la lista dei generi, se non presente metto una lista vuota
+                            genres = ", ".join(genres_list)  # Concateno i generi in una stringa
                             average_rating = data.get("average_rating")
                             description = data.get("description")
                             type = data.get("type")
@@ -86,8 +87,10 @@ def populate_table(data_folder):
                             INSERT INTO dataset (id, title, release_year, genres, average_rating, description, type)
                             VALUES (%s, %s, %s, %s, %s, %s, %s);
                             """
+                            if release_year == "":
+                                release_year = -1
                             #Usa genres come array di stringhe
-                            cursor.execute(insert_query, (id, title, release_year, genres, average_rating, description, type))
+                            cursor.execute(insert_query, (id, title, int(release_year), genres, average_rating, description, type))
                 print("Popolazione della tabella completata.")
         except Exception as e:
             print(f"Errore nella popolazione della tabella: {e}")
