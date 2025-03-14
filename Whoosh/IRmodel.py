@@ -14,28 +14,28 @@ class IRModel:
         self.index = index.open_dir(self.index_dir)
 
     # Ricerca nel modello 
-    def search(self, query: str, resLimit=10, fuzzy=False):
-    # Definizione dei campi su cui cercare
+    def search(self, query: str, fuzzy=False):
+
+        # Definizione dei campi su cui cercare
         fields = ["title", "genres", "release_year", "average_rating", "type", "id", "processed_description"]
         
         # Configura il parser con il supporto delle query AND di default
         parser = MultifieldParser(fields, schema=self.index.schema, group=AndGroup)
-        
-        # Se è attiva la fuzzy search, modifica la query per usare la fuzzy logic sui termini
-        if fuzzy:
+
+        # Se è attiva la fuzzy search, esegue la ricerca fuzzy
+        if fuzzy: # solo se fuzzy = true
             if ":" in query:
                 field, term = query.split(":", 1)
                 term = term.strip()
                 parsed_query = FuzzyTerm(field, term, maxdist=2)
             else:
                 parsed_query = Or([FuzzyTerm("title", query, maxdist=2), FuzzyTerm("description", query, maxdist=2)])
-        else:
-            # Usa direttamente il parser Whoosh, che gestisce anche i range numerici
-            parsed_query = parser.parse(query)
+        else: # solo se fuzzy = false
+            parsed_query = parser.parse(query) # uso il parser di whoosh
 
         # Creazione del searcher
         searcher = self.index.searcher(weighting=self.model)
-        results = searcher.search(parsed_query, limit=resLimit)
+        results = searcher.search(parsed_query, limit=10)
 
         # Debug: stampa la query finale eseguita
         print(f"Query finale eseguita: {parsed_query}")
@@ -79,28 +79,25 @@ if __name__ == '__main__':
     else:
         print("Scelta non valida")
         exit(1)
-
+    
+    # inizializzazione del modello 
     ir_model = IRModel(index_dir, weightingModel=ranking_model)
 
     # input della query
     user_query = input("Inserisci la query di ricerca: ")
 
     # se la query è di tipo title, description, o senza campi, chiede se voglio effettuare la fuzzy
-    if not any(field in user_query for field in ["title:", "description:", "genres:", "release_year:", "average_rating:", "type:", "id:", "processed_description:"]):
-        print("Non hai specificato i campi. Vuoi eseguire una ricerca fuzzy nei campi 'title' e 'description'? (s/n)")
+    if (not any(field in user_query for field in ["title:", "description:", "genres:", "release_year:", "average_rating:", "type:", "id:", "processed_description:"]) or (user_query.startswith("title:")) or (user_query.startswith("description:")) ):
+        print("Vuoi eseguire una ricerca fuzzy nei campi 'title' e 'description'? (s/n)")
         fuzzy_choice = input("Inserisci 's' per sì, 'n' per no: ").lower()
-        fuzzy_search = fuzzy_choice == 's'
-    elif user_query.startswith("title:") or user_query.startswith("description:"):
-        print("Vuoi eseguire una ricerca fuzzy? (s/n)")
-        fuzzy_choice = input("Inserisci 's' per sì, 'n' per no: ").lower()
-        fuzzy_search = fuzzy_choice == 's'
+        fuzzy_search = (fuzzy_choice == 's') # è un'espressione booleana: se fuzzy_choiche == s allora si imposta automaticamente a true
     else:
         fuzzy_search = False
 
     # effettiva ricerca
-    results = ir_model.search(user_query, fuzzy=fuzzy_search)
+    results = ir_model.search(user_query, fuzzy_search)
 
-    # mostra i risultati
+    # formattazione dei risultati
     if results:
         print(f"\nRisultati trovati: {len(results)}\n")
         for i, (doc_id, doc_info) in enumerate(results.items(), start=1):
