@@ -1,12 +1,14 @@
-# DESCCRIZONE: Crea un indice e cerca in PyLucene, da un dataset di film e serie TV in JSON, con ranking personalizzabile.
+# DESCRIZIONE: Script che gestisce l'intero motore creato in PyLucene
+#   Crea un indice e cerca in PyLucene, da un dataset di film e serie TV in JSON.
+#   Ordina con BM25, ma consente ranking personalizzabile!
 
-# Import di librerie per Python
+# Librerie Python
 import os
 import json
 import shutil
 from glob import glob
 
-# Import di librerie per PyLucene
+#Librerie Lucene
 import lucene
 from java.nio.file import Paths
 from org.apache.lucene.analysis.standard import StandardAnalyzer
@@ -14,16 +16,15 @@ from org.apache.lucene.document import Document, Field, TextField, StoredField, 
 from org.apache.lucene.index import IndexWriter, IndexWriterConfig
 from org.apache.lucene.store import FSDirectory
 
-# Import di librerie per il preprocessing
+#Librerie NLTK, per preprocessing testuale
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 import shlex
 
-# Import di librerie per il ranking
+# Libreria i due ranking
 from org.apache.lucene.search.similarities import BM25Similarity, ClassicSimilarity
-
 
 nltk.data.path = ['/root/nltk_data']
 stop_words = set(stopwords.words('english'))
@@ -38,28 +39,31 @@ def preprocess_text(text):
     return " ".join(processed_tokens)
 
 class PyLuceneIR:
-    DATASET_PATH = "dataset_film_serietv" # Cartella con i file JSON
-    INDEX_PATH = "lucene_index"  # Cartella principale con indici
-    USER_INDEX = os.path.join(INDEX_PATH, "userindex")  # Sottocartella per l'indice utente, per spelling correction
+    DATASET_PATH = "dataset_film_serietv" # Qui ci sono i file JSON
+    INDEX_PATH = "lucene_index"  # Cartella per gli indici
+    MAIN_INDEX = os.path.join(INDEX_PATH, "mainindex")  # Sottocartella per l'indice di ricerca
+    USER_INDEX = os.path.join(INDEX_PATH, "userindex")  # Sottocartella per spelling correction
 
     @staticmethod
     def init_lucene():
-        # Inizializza la JVM di Lucene
-        lucene.initVM(vmargs=['-Djava.awt.headless=true'])
+        # Inizializza la JVM di Lucene SOLO SE non è già attiva
+        if not lucene.getVMEnv():
+            lucene.initVM(vmargs=['-Djava.awt.headless=true'])
+
 
     @staticmethod
     def prepare_index_dir():
-        # Elimina l'indice esistente e crea la cartella per il nuovo indice
+        # Elimina l'indice esistente e crea le cartelle per il nuovo indice
         if os.path.exists(PyLuceneIR.INDEX_PATH):
             shutil.rmtree(PyLuceneIR.INDEX_PATH)
-        os.makedirs(PyLuceneIR.USER_INDEX, exist_ok=True)
+        os.makedirs(PyLuceneIR.MAIN_INDEX, exist_ok=True)
 
     @staticmethod
     def create_index():
         # Crea l'indice leggendo i file JSON e applicando il preprocessing
         PyLuceneIR.init_lucene()
         PyLuceneIR.prepare_index_dir()
-        index_dir = FSDirectory.open(Paths.get(PyLuceneIR.USER_INDEX))
+        index_dir = FSDirectory.open(Paths.get(PyLuceneIR.MAIN_INDEX))
         analyzer = StandardAnalyzer()
         config = IndexWriterConfig(analyzer)
         writer = IndexWriter(index_dir, config)
@@ -100,7 +104,7 @@ class PyLuceneIR:
                 writer.addDocument(doc)
         writer.commit()
         writer.close()
-        print(f"Indice creato in: {PyLuceneIR.USER_INDEX}")
+        print(f"Indice creato in: {PyLuceneIR.MAIN_INDEX}")
 
     @staticmethod
     def build_query(query_str, analyzer):
@@ -121,7 +125,7 @@ class PyLuceneIR:
                     current_operator = BooleanClause.Occur.MUST_NOT
                 continue
             subquery = None
-            # Se il token contiene ':', è una query su un campo specifico
+            # Se il token contiene ':' è una query su un campo specifico
             if ":" in token:
                 field, value = token.split(":", 1)
                 # Se il valore inizia con un operatore di range
@@ -188,8 +192,6 @@ class PyLuceneIR:
                             lower = -2147483648
                             upper = num_val - (1 if op == "<" else 0)
                         subquery = IntPoint.newRangeQuery(field, lower, upper)
-                else:
-                    subquery = TermQuery(Term("processed_content", token))
             if subquery is not None:
                 builder.add(subquery, current_operator)
                 current_operator = BooleanClause.Occur.MUST
@@ -197,11 +199,11 @@ class PyLuceneIR:
 
     @staticmethod
     def search_index(query_str, max_results=10, ranking_method="1"):
-        # Cerca nell'indice usando la query costruita e imposta il ranking in base alla scelta dell'utente
+        # Cerca nell'indice usando la query costruita e imposta il ranking in base al numero scelto
         from org.apache.lucene.index import DirectoryReader
         from org.apache.lucene.search import IndexSearcher
         PyLuceneIR.init_lucene()
-        index_dir = FSDirectory.open(Paths.get(PyLuceneIR.USER_INDEX))
+        index_dir = FSDirectory.open(Paths.get(PyLuceneIR.MAIN_INDEX))
         reader = DirectoryReader.open(index_dir)
         searcher = IndexSearcher(reader)
         analyzer = StandardAnalyzer()
@@ -224,7 +226,7 @@ class PyLuceneIR:
         return results
 
 if __name__ == "__main__":
-    # Esegue l'indicizzazione e consente ricerche con ranking scelto dall'utente
+    # Esegue l'indicizzazione e consente ricerche con ranking scelto tramite numero
     PyLuceneIR.create_index()
     query_input = input("Inserisci la query di ricerca: ")
     ranking_input = input("Inserisci il metodo di ranking (1 per BM25, 2 per TFIDF): ")
