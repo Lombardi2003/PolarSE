@@ -196,5 +196,5 @@ def create():
     print(f"Dataset generato con {c} elementi, {movies_saved} filme e {series_saved} serie tv.")
 
 # Inizio programma
-if __name__ == '__create_dataset__':
+if __name__ == '__main__':
     create()
