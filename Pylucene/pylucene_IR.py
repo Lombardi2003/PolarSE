@@ -93,6 +93,15 @@ class PyLuceneIR:
                 description = data.get("description", "")
                 doc.add(TextField("description", description, Field.Store.YES))
                 doc.add(TextField("processed_description", preprocess_text(description), Field.Store.NO))
+                
+                media_type = data.get("media_type", "UNKNOWN")
+                doc.add(StoredField("media_type", media_type))
+                doc.add(TextField("media_type_txt", media_type, Field.Store.NO)) # Campo di testo per la ricerca
+                
+                genres = data.get("genres", [])
+                genres_str = ", ".join(genres) if isinstance(genres, list) else str(genres)
+                doc.add(StoredField("genres", genres_str))
+                doc.add(TextField("genres_txt", genres_str, Field.Store.NO)) # Campo di testo per la ricerca
 
                 release_year = data.get("release_year", None)
                 if release_year:
@@ -107,9 +116,9 @@ class PyLuceneIR:
                 average_rating = data.get("average_rating", None)
                 if average_rating:
                     try:
-                        rating = int(float(average_rating))
-                        doc.add(StoredField("average_rating", rating))
-                        doc.add(IntPoint("average_rating", rating))
+                        rating = float(average_rating)
+                        doc.add(StoredField("average_rating", str(rating)))
+                        doc.add(IntPoint("average_rating", int(float(rating))))
                         doc.add(StringField("average_rating_str", str(rating), Field.Store.NO))
                     except ValueError:
                         print(f"Valore non valido per average_rating in {file}: {average_rating}")
@@ -177,125 +186,73 @@ class PyLuceneIR:
                         
                         subquery = IntPoint.newRangeQuery(field, lower, upper)
                 else:
-                    # Per i campi testuali, miglioriamo la gestione
-                    if field in ["title", "description"]:
-                        # Creiamo un subbuilder per combinare le ricerche in campi preprocessati e normali
-                        subbuilder = BooleanQuery.Builder()
-                        
-                        # Prima cerchiamo nel campo preprocessato
-                        if value.startswith('"') and value.endswith('"'):
-                            # Gestione delle frasi tra virgolette
-                            phrase_text = value.strip('"')
-                            processed_phrase = preprocess_text(phrase_text)
-                            if processed_phrase:
-                                terms = processed_phrase.split()
-                                phrase_builder = PhraseQuery.Builder()
-                                for pos, term in enumerate(terms):
-                                    phrase_builder.add(Term(f"processed_{field}", term), pos)
-                                subbuilder.add(phrase_builder.build(), BooleanClause.Occur.SHOULD)
-                        else:
-                            # Gestione dei termini semplici
-                            processed_value = preprocess_text(value)
-                            if processed_value:
-                                for term in processed_value.split():
-                                    subbuilder.add(TermQuery(Term(f"processed_{field}", term)), BooleanClause.Occur.SHOULD)
-                        
-                        # Poi cerchiamo anche nel campo originale per sicurezza
-                        if value.startswith('"') and value.endswith('"'):
-                            phrase_text = value.strip('"')
-                            terms = phrase_text.lower().split()
-                            phrase_builder = PhraseQuery.Builder()
-                            for pos, term in enumerate(terms):
-                                phrase_builder.add(Term(field, term), pos)
-                            subbuilder.add(phrase_builder.build(), BooleanClause.Occur.SHOULD)
-                        else:
-                            for term in value.lower().split():
-                                subbuilder.add(TermQuery(Term(field, term)), BooleanClause.Occur.SHOULD)
-                        
-                        subquery = subbuilder.build()
+                    # Gestione virgolette come AND
+                    if value.startswith('"') and value.endswith('"'):
+                        terms = value.strip('"').split()
+                        term_builder = BooleanQuery.Builder()
+                        for term in terms:
+                            term_builder.add(TermQuery(Term(field, term.lower())), BooleanClause.Occur.MUST)
+                        subquery = term_builder.build()
                     else:
-                        # Per campi numerici
-                        if field in ["release_year", "average_rating"]:
-                            try:
-                                int_value = int(value)
-                                subquery = IntPoint.newExactQuery(field, int_value)
-                            except ValueError:
-                                # Fallback a ricerca per stringa
-                                subquery = TermQuery(Term(f"{field}_str", value))
-                        else:
-                            # Per altri campi non testuali/numerici
-                            subquery = TermQuery(Term(field, value))
+                        subquery = TermQuery(Term(field, value))
             else:
-                # Query senza campo specificato (cerca in campi testuali)
-                if ">=" in token or ">" in token or "<=" in token or "<" in token:
-                    op = None
-                    field = None
-                    if ">=" in token:
-                        field, num_val = token.split(">=", 1)
-                        op = ">="
-                    elif ">" in token:
-                        field, num_val = token.split(">", 1)
-                        op = ">"
-                    elif "<=" in token:
-                        field, num_val = token.split("<=", 1)
-                        op = "<="
-                    elif "<" in token:
-                        field, num_val = token.split("<", 1)
-                        op = "<"
-
-                    try:
-                        num_val = int(num_val)
-                    except ValueError:
-                        num_val = None
-
-                    if num_val is not None:
-                        if op in (">", ">="):
-                            lower = num_val + (1 if op == ">" else 0)
-                            upper = 2147483647
-                        else:
-                            lower = -2147483648
-                            upper = num_val - (1 if op == "<" else 0)
-                        
-                        subquery = IntPoint.newRangeQuery(field, lower, upper)
+                # Gestione virgolette come AND per query senza campo specifico
+                if token.startswith('"') and token.endswith('"'):
+                    terms = token.strip('"').split()
+                    # Query per title
+                    title_builder = BooleanQuery.Builder()
+                    for term in terms:
+                        title_builder.add(TermQuery(Term("title", term.lower())), BooleanClause.Occur.MUST)
+                        processed_term = preprocess_text(term)
+                        if processed_term:
+                            title_builder.add(TermQuery(Term("processed_title", processed_term)), BooleanClause.Occur.MUST)
+                    
+                    # Query per description
+                    desc_builder = BooleanQuery.Builder()
+                    for term in terms:
+                        desc_builder.add(TermQuery(Term("description", term.lower())), BooleanClause.Occur.MUST)
+                        processed_term = preprocess_text(term)
+                        if processed_term:
+                            desc_builder.add(TermQuery(Term("processed_description", processed_term)), BooleanClause.Occur.MUST)
+                    
+                    # Combina title e description con OR
+                    combined_builder = BooleanQuery.Builder()
+                    combined_builder.add(title_builder.build(), BooleanClause.Occur.SHOULD)
+                    combined_builder.add(desc_builder.build(), BooleanClause.Occur.SHOULD)
+                    subquery = combined_builder.build()
                 else:
-                    # Ricerca in tutti i campi testuali (prima preprocessati, poi originali)
-                    text_builder = BooleanQuery.Builder()
-                    
-                    # Aggiunge query per i campi preprocessati
-                    if token.startswith('"') and token.endswith('"'):
-                        # Gestione delle frasi tra virgolette
-                        phrase_text = token.strip('"')
-                        processed_phrase = preprocess_text(phrase_text)
-                        if processed_phrase:
-                            terms = processed_phrase.split()
+                    if ">=" in token or ">" in token or "<=" in token or "<" in token:
+                        op = None
+                        field = None
+                        if ">=" in token:
+                            field, num_val = token.split(">=", 1)
+                            op = ">="
+                        elif ">" in token:
+                            field, num_val = token.split(">", 1)
+                            op = ">"
+                        elif "<=" in token:
+                            field, num_val = token.split("<=", 1)
+                            op = "<="
+                        elif "<" in token:
+                            field, num_val = token.split("<", 1)
+                            op = "<"
+
+                        try:
+                            num_val = int(num_val)
+                        except ValueError:
+                            num_val = None
+
+                        if num_val is not None:
+                            if op in (">", ">="):
+                                lower = num_val + (1 if op == ">" else 0)
+                                upper = 2147483647
+                            else:
+                                lower = -2147483648
+                                upper = num_val - (1 if op == "<" else 0)
                             
-                            for field in ["processed_title", "processed_description"]:
-                                phrase_builder = PhraseQuery.Builder()
-                                for pos, term in enumerate(terms):
-                                    phrase_builder.add(Term(field, term), pos)
-                                text_builder.add(phrase_builder.build(), BooleanClause.Occur.SHOULD)
-                        
-                        # Cerchiamo anche nei campi originali
-                        terms = phrase_text.lower().split()
-                        for field in ["title", "description"]:
-                            phrase_builder = PhraseQuery.Builder()
-                            for pos, term in enumerate(terms):
-                                phrase_builder.add(Term(field, term), pos)
-                            text_builder.add(phrase_builder.build(), BooleanClause.Occur.SHOULD)
+                            subquery = IntPoint.newRangeQuery(field, lower, upper)
                     else:
-                        # Gestione termini singoli
-                        processed_value = preprocess_text(token)
-                        if processed_value:
-                            for term in processed_value.split():
-                                text_builder.add(TermQuery(Term("processed_title", term)), BooleanClause.Occur.SHOULD)
-                                text_builder.add(TermQuery(Term("processed_description", term)), BooleanClause.Occur.SHOULD)
-                        
-                        # Cerchiamo anche nei campi originali
-                        for term in token.lower().split():
-                            text_builder.add(TermQuery(Term("title", term)), BooleanClause.Occur.SHOULD)
-                            text_builder.add(TermQuery(Term("description", term)), BooleanClause.Occur.SHOULD)
-                    
-                    subquery = text_builder.build()
+                        subquery = TermQuery(Term("title", token))
 
             if subquery is not None:
                 builder.add(subquery, current_operator)
@@ -332,6 +289,8 @@ class PyLuceneIR:
                 "description": doc.get("description"),
                 "release_year": doc.get("release_year"),
                 "average_rating": doc.get("average_rating"),
+                "media_type": doc.get("media_type"),
+                "genres": doc.get("genres"),
                 "score": hit.score
             })
 
@@ -345,4 +304,9 @@ if __name__ == "__main__":
     ranking_input = input("Inserisci il metodo di ranking (1 per BM25, 2 per TFIDF): ")
     risultati = PyLuceneIR.search_index(query_input, ranking_method=ranking_input)
     for idx, doc in enumerate(risultati, 1):
-        print(f"Risultato {idx}: {doc}")
+        print(f"RIS. {idx}: {doc['title']} [{doc['media_type']}]")
+        print(f"ANNO DI USCITA: {doc['release_year']}")
+        print(f"GENERI: {doc['genres']}")
+        print(f"VALUTAZIONE MEDIA: {doc['average_rating']}")
+        print(f"DESCRIZIONE (EN): {doc['description']}")
+        print("*" * 40)
