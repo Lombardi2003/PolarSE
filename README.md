@@ -37,6 +37,7 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 
 ### 📦 **Librerie e Strumenti Necessari**:
 - **Python 3.8+**
+
 - Librerie Python:
   - `lucene` 🔍
   - `whoosh` 🔍
@@ -44,7 +45,7 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
   - `psycopg2` 🗃️
   - `requests` 🌐
   - `tqdm` ⏳
-  
+
 - **PostgreSQL**:
   - ?????????????????????????
 
