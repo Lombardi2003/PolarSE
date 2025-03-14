@@ -1,4 +1,4 @@
-# Cose da fare 🚀
+# 🚀 Cose da fare 🚀
 
 Qui inseriamo tutte le cose da fare, un programma da realizzare passo passo:
 1. **Configurazione Database 🗄️**
