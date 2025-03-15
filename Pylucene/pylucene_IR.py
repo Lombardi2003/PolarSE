@@ -1,4 +1,3 @@
-# AUTORE: Cocciardi Daniele Silvestro, M. 142029
 # DESCRIZIONE: Script che gestisce l'intero motore creato in PyLucene
     # Crea un indice e cerca in PyLucene, da un dataset di film e serie TV in JSON.
     # Ordina con BM25, ma consente ranking personalizzabile!
@@ -17,7 +16,7 @@ from org.apache.lucene.search import IndexSearcher, BooleanQuery, BooleanClause,
 from org.apache.lucene.search.similarities import BM25Similarity, ClassicSimilarity
 from org.apache.lucene.search.spell import SpellChecker, LuceneDictionary
 
-# NLTK per preprocessing testuale
+# NLTK imports per preprocessing testuale
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
@@ -44,23 +43,20 @@ class PyLuceneIR:
 
     @staticmethod
     def init_lucene():
-        # Inizializza la JVM di Lucene solo se non è già attiva
+        # Inizializzo la JVM di Lucene SOLO SE non è già attiva
         if not lucene.getVMEnv():
             lucene.initVM(vmargs=['-Djava.awt.headless=true'])
 
     @staticmethod
     def prepare_index_dir():
-        '''
-        # Elimina l'indice esistente e crea le cartelle per il nuovo indice
+        # Elimino l'indice esistente e creo le cartelle per il nuovo indice
         if os.path.exists(PyLuceneIR.INDEX_PATH):
             shutil.rmtree(PyLuceneIR.INDEX_PATH)
         os.makedirs(PyLuceneIR.MAIN_INDEX, exist_ok=True)
         os.makedirs(PyLuceneIR.SPELLCHECKER_INDEX, exist_ok=True)
-        '''
 
     @staticmethod
     def create_index():
-        '''
         PyLuceneIR.init_lucene()
         PyLuceneIR.prepare_index_dir()
 
@@ -92,7 +88,8 @@ class PyLuceneIR:
                 doc.add(TextField("description", description, Field.Store.YES))
                 doc.add(TextField("processed_description", preprocess_text(description), Field.Store.NO))
                 
-                media_type = data.get("media_type", "UNKNOWN")
+                # Usa il campo "media_type" se presente, altrimenti "type"
+                media_type = data.get("media_type", data.get("type", "UNKNOWN"))
                 doc.add(StoredField("media_type", media_type))
                 doc.add(TextField("media_type_txt", media_type, Field.Store.NO))
                 
@@ -131,12 +128,12 @@ class PyLuceneIR:
         spell_checker = SpellChecker(spell_dir)
         
         reader = DirectoryReader.open(main_index_dir)
-        # Usa il campo indicizzato "genres_txt" per il dizionario dello spellchecker
+        # Uso il campo indicizzato "genres_txt" per il dizionario dello spellchecker
         spell_checker.indexDictionary(LuceneDictionary(reader, "genres_txt"), spell_config, True)
         
         reader.close()
         spell_checker.close()
-        '''
+
         print("Indici creati con successo")
 
     @staticmethod
@@ -171,7 +168,7 @@ class PyLuceneIR:
     def build_query(query_str, analyzer):
         tokens = shlex.split(query_str)
         builder = BooleanQuery.Builder()
-        # Se la query contiene " OR ", forziamo tutte le clausole (eccetto NOT) ad essere SHOULD
+        # Se la query contiene " OR ", forzo tutte le clausole (eccetto NOT) ad essere SHOULD
         force_should = " OR " in query_str.upper()
         current_operator = BooleanClause.Occur.MUST
 
@@ -189,7 +186,7 @@ class PyLuceneIR:
 
             if ":" in token:
                 field, value = token.split(":", 1)
-                # Se il campo è "genres", mappalo su "genres_txt"
+                # Se il campo è "genres", mappo su "genres_txt"
                 if field.lower() == "genres":
                     field = "genres_txt"
                 if any(value.startswith(op) for op in (">=", ">", "<=", "<")):
@@ -235,12 +232,12 @@ class PyLuceneIR:
                     subquery = TermQuery(Term("title", token.lower()))
 
             if subquery is not None:
-                # Se force_should è True e l'operatore corrente non è NOT, forza l'uso di SHOULD
+                # Se force_should è vero e l'operatore corrente non è NOT, forzo l'uso di SHOULD
                 if force_should and current_operator != BooleanClause.Occur.MUST_NOT:
                     builder.add(subquery, BooleanClause.Occur.SHOULD)
                 else:
                     builder.add(subquery, current_operator)
-            # Non resettiamo current_operator qui per mantenere l'operatore corrente
+            # Mantengo l'operatore corrente
         return builder.build()
 
     @staticmethod
@@ -277,16 +274,16 @@ class PyLuceneIR:
 if __name__ == "__main__":
     PyLuceneIR.create_index()
     
-    original_query = input("INSERISCI LA QUERY DI RICERCA: ")
+    original_query = input("Inserisci la query di ricerca: ")
     corrected_query = PyLuceneIR.check_spelling(original_query)
     
-    print(f"\n--[DEBUG MESSAGE] Eseguo il parsing della query: {corrected_query}")
-    ranking = input("SCEGLI IL METODO DI RANKING (1 = BM25, 2 = TFIDF): ")
+    print(f"\nEsecuzione ricerca con query: {corrected_query}")
+    ranking = input("Scegli il ranking (1=BM25, 2=TFIDF): ")
     
     results = PyLuceneIR.search_index(corrected_query, ranking_method=ranking)
     
     for idx, doc in enumerate(results, 1):
-        # Mappatura del media_type: "tv" → "TV SHOW", "movie" → "MOVIE"
+        # Controllo il media_type: "tv" → "TV SHOW", "movie" → "MOVIE"
         media = doc.get("media_type", "UNKNOWN")
         if media.lower() == "tv":
             media_str = "TV SHOW"
@@ -294,8 +291,7 @@ if __name__ == "__main__":
             media_str = "MOVIE"
         else:
             media_str = media.upper()
-        print(f"\nRISULTATO {idx}: {doc}")
-        print(f"RIS. {idx}: {doc['title']} [{media_str}]")
+        print(f"\nRIS. {idx}: {doc['title']} [{media_str}]")
         print(f"ANNO DI USCITA: {doc['release_year']}")
         print(f"GENERI: {doc['genres']}")
         print(f"VALUTAZIONE MEDIA: {doc['average_rating']}")
