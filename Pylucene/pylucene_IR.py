@@ -1,33 +1,28 @@
+# AUTORE: Cocciardi Daniele Silvestro, M. 142029
 # DESCRIZIONE: Script che gestisce l'intero motore creato in PyLucene
+    # Crea un indice e cerca in PyLucene, da un dataset di film e serie TV in JSON.
+    # Ordina con BM25, ma consente ranking personalizzabile!
 
-# Crea un indice e cerca in PyLucene, da un dataset di film e serie TV in JSON.
-
-# Ordina con BM25, ma consente ranking personalizzabile!
-
-# Librerie Python
 import os
 import json
 import shutil
 from glob import glob
-
-#Librerie Lucene
 import lucene
 from java.nio.file import Paths
 from org.apache.lucene.analysis.standard import StandardAnalyzer
 from org.apache.lucene.document import Document, Field, TextField, StoredField, IntPoint, StringField
-from org.apache.lucene.index import IndexWriter, IndexWriterConfig, Term
+from org.apache.lucene.index import IndexWriter, IndexWriterConfig, Term, DirectoryReader
 from org.apache.lucene.store import FSDirectory
+from org.apache.lucene.search import IndexSearcher, BooleanQuery, BooleanClause, TermQuery, PhraseQuery
+from org.apache.lucene.search.similarities import BM25Similarity, ClassicSimilarity
+from org.apache.lucene.search.spell import SpellChecker, LuceneDictionary
 
-#Librerie NLTK, per preprocessing testuale
+# NLTK per preprocessing testuale
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 import shlex
-
-# Libreria per i due ranking
-from org.apache.lucene.search.similarities import BM25Similarity, ClassicSimilarity
-from org.apache.lucene.search import BooleanQuery, BooleanClause, TermQuery, PhraseQuery
 
 nltk.data.path = ['/root/nltk_data']
 stop_words = set(stopwords.words('english'))
@@ -42,34 +37,38 @@ def preprocess_text(text):
     return " ".join(processed_tokens)
 
 class PyLuceneIR:
-    DATASET_PATH = "dataset_film_serietv" # Qui ci sono i file JSON
-    INDEX_PATH = "lucene_index" # Cartella per gli indici
-    MAIN_INDEX = os.path.join(INDEX_PATH, "mainindex") # Sottocartella per l'indice di ricerca
-    USER_INDEX = os.path.join(INDEX_PATH, "userindex") # Sottocartella per spelling correction
+    DATASET_PATH = "dataset_film_serietv"  # Qui ci sono i file JSON
+    INDEX_PATH = "lucene_index"             # Cartella per gli indici
+    MAIN_INDEX = os.path.join(INDEX_PATH, "mainindex")  # Sottocartella per l'indice di ricerca
+    SPELLCHECKER_INDEX = os.path.join(INDEX_PATH, "spellchecker")  # Sottocartella per spell correction
 
     @staticmethod
     def init_lucene():
-        # Inizializza la JVM di Lucene SOLO SE non è già attiva
+        # Inizializza la JVM di Lucene solo se non è già attiva
         if not lucene.getVMEnv():
             lucene.initVM(vmargs=['-Djava.awt.headless=true'])
 
     @staticmethod
     def prepare_index_dir():
+        '''
         # Elimina l'indice esistente e crea le cartelle per il nuovo indice
         if os.path.exists(PyLuceneIR.INDEX_PATH):
             shutil.rmtree(PyLuceneIR.INDEX_PATH)
         os.makedirs(PyLuceneIR.MAIN_INDEX, exist_ok=True)
+        os.makedirs(PyLuceneIR.SPELLCHECKER_INDEX, exist_ok=True)
+        '''
 
     @staticmethod
     def create_index():
-        # Crea l'indice leggendo i file JSON e applicando il preprocessing
+        '''
         PyLuceneIR.init_lucene()
         PyLuceneIR.prepare_index_dir()
 
-        index_dir = FSDirectory.open(Paths.get(PyLuceneIR.MAIN_INDEX))
-        analyzer = StandardAnalyzer()
-        config = IndexWriterConfig(analyzer)
-        writer = IndexWriter(index_dir, config)
+        # Creazione indice principale
+        main_index_dir = FSDirectory.open(Paths.get(PyLuceneIR.MAIN_INDEX))
+        main_analyzer = StandardAnalyzer()
+        main_config = IndexWriterConfig(main_analyzer)
+        main_writer = IndexWriter(main_index_dir, main_config)
 
         json_files = glob(os.path.join(PyLuceneIR.DATASET_PATH, "*.json"))
         if not json_files:
@@ -85,60 +84,96 @@ class PyLuceneIR:
                     continue
 
                 doc = Document()
-
                 title = data.get("title", "")
                 doc.add(TextField("title", title, Field.Store.YES))
                 doc.add(TextField("processed_title", preprocess_text(title), Field.Store.NO))
-
+                
                 description = data.get("description", "")
                 doc.add(TextField("description", description, Field.Store.YES))
                 doc.add(TextField("processed_description", preprocess_text(description), Field.Store.NO))
                 
                 media_type = data.get("media_type", "UNKNOWN")
                 doc.add(StoredField("media_type", media_type))
-                doc.add(TextField("media_type_txt", media_type, Field.Store.NO)) # Campo di testo per la ricerca
+                doc.add(TextField("media_type_txt", media_type, Field.Store.NO))
                 
                 genres = data.get("genres", [])
                 genres_str = ", ".join(genres) if isinstance(genres, list) else str(genres)
                 doc.add(StoredField("genres", genres_str))
-                doc.add(TextField("genres_txt", genres_str, Field.Store.NO)) # Campo di testo per la ricerca
+                # Campo indicizzato per la ricerca sui generi
+                doc.add(TextField("genres_txt", genres_str, Field.Store.NO))
 
-                release_year = data.get("release_year", None)
-                if release_year:
+                if release_year := data.get("release_year"):
                     try:
                         year = int(release_year)
-                        doc.add(StoredField("release_year", year))
+                        doc.add(StoredField("release_year", str(year)))
                         doc.add(IntPoint("release_year", year))
                         doc.add(StringField("release_year_str", str(year), Field.Store.NO))
                     except ValueError:
                         print(f"Valore non valido per release_year in {file}: {release_year}")
 
-                average_rating = data.get("average_rating", None)
-                if average_rating:
+                if average_rating := data.get("average_rating"):
                     try:
                         rating = float(average_rating)
                         doc.add(StoredField("average_rating", str(rating)))
-                        doc.add(IntPoint("average_rating", int(float(rating))))
+                        doc.add(IntPoint("average_rating", int(rating)))
                         doc.add(StringField("average_rating_str", str(rating), Field.Store.NO))
                     except ValueError:
                         print(f"Valore non valido per average_rating in {file}: {average_rating}")
 
-                writer.addDocument(doc)
+                main_writer.addDocument(doc)
 
-        writer.commit()
-        writer.close()
-        print(f"Indice creato in: {PyLuceneIR.MAIN_INDEX}")
+        main_writer.commit()
+        main_writer.close()
+
+        # Creazione indice spellchecker
+        spell_dir = FSDirectory.open(Paths.get(PyLuceneIR.SPELLCHECKER_INDEX))
+        spell_config = IndexWriterConfig(StandardAnalyzer())
+        spell_checker = SpellChecker(spell_dir)
+        
+        reader = DirectoryReader.open(main_index_dir)
+        # Usa il campo indicizzato "genres_txt" per il dizionario dello spellchecker
+        spell_checker.indexDictionary(LuceneDictionary(reader, "genres_txt"), spell_config, True)
+        
+        reader.close()
+        spell_checker.close()
+        '''
+        print("Indici creati con successo")
+
+    @staticmethod
+    def check_spelling(query):
+        PyLuceneIR.init_lucene()
+        spell_dir = FSDirectory.open(Paths.get(PyLuceneIR.SPELLCHECKER_INDEX))
+        spell_checker = SpellChecker(spell_dir)
+        
+        corrected_parts = []
+        for part in query.split():
+            if ':' in part:
+                field, value = part.split(':', 1)
+                suggestions = spell_checker.suggestSimilar(value, 1)
+                if suggestions:
+                    choice = input(f"Intendevi '{field}:{suggestions[0]}' invece di '{part}'? (y/n): ")
+                    corrected = f"{field}:{suggestions[0]}" if choice.lower() == 'y' else part
+                    corrected_parts.append(corrected)
+                else:
+                    corrected_parts.append(part)
+            else:
+                suggestions = spell_checker.suggestSimilar(part, 1)
+                if suggestions:
+                    choice = input(f"Intendevi '{suggestions[0]}' invece di '{part}'? (y/n): ")
+                    corrected_parts.append(suggestions[0] if choice.lower() == 'y' else part)
+                else:
+                    corrected_parts.append(part)
+        
+        spell_checker.close()
+        return ' '.join(corrected_parts)
 
     @staticmethod
     def build_query(query_str, analyzer):
-        # Costruisce una query Lucene a partire da una stringa in ingresso
-        from org.apache.lucene.search import BooleanQuery, BooleanClause, TermQuery, PhraseQuery
-        from org.apache.lucene.index import Term
-        from org.apache.lucene.document import IntPoint
-
-        tokens = shlex.split(query_str) # suddivide rispettando le virgolette
+        tokens = shlex.split(query_str)
         builder = BooleanQuery.Builder()
-        current_operator = BooleanClause.Occur.MUST # operatore di default
+        # Se la query contiene " OR ", forziamo tutte le clausole (eccetto NOT) ad essere SHOULD
+        force_should = " OR " in query_str.upper()
+        current_operator = BooleanClause.Occur.MUST
 
         for token in tokens:
             if token.upper() in ("AND", "OR", "NOT"):
@@ -152,41 +187,27 @@ class PyLuceneIR:
 
             subquery = None
 
-            # Se il token contiene ':' è una query su un campo specifico
             if ":" in token:
                 field, value = token.split(":", 1)
-                # Se il valore inizia con un operatore di range
-                if value.startswith(">=") or value.startswith(">") or value.startswith("<=") or value.startswith("<"):
-                    op = None
-                    if value.startswith(">="):
-                        op = ">="
-                        num_val = value[2:]
-                    elif value.startswith(">"):
-                        op = ">"
-                        num_val = value[1:]
-                    elif value.startswith("<="):
-                        op = "<="
-                        num_val = value[2:]
-                    elif value.startswith("<"):
-                        op = "<"
-                        num_val = value[1:]
-
+                # Se il campo è "genres", mappalo su "genres_txt"
+                if field.lower() == "genres":
+                    field = "genres_txt"
+                if any(value.startswith(op) for op in (">=", ">", "<=", "<")):
+                    op = value[:2] if value[:2] in (">=", "<=") else value[0]
+                    num_val = value[2:] if op in (">=", "<=") else value[1:]
                     try:
                         num_val = int(num_val)
+                        if op == ">=":
+                            subquery = IntPoint.newRangeQuery(field, num_val, 2147483647)
+                        elif op == ">":
+                            subquery = IntPoint.newRangeQuery(field, num_val + 1, 2147483647)
+                        elif op == "<=":
+                            subquery = IntPoint.newRangeQuery(field, -2147483648, num_val)
+                        elif op == "<":
+                            subquery = IntPoint.newRangeQuery(field, -2147483648, num_val - 1)
                     except ValueError:
-                        num_val = None
-
-                    if num_val is not None:
-                        if op in (">", ">="):
-                            lower = num_val + (1 if op == ">" else 0)
-                            upper = 2147483647
-                        else:
-                            lower = -2147483648
-                            upper = num_val - (1 if op == "<" else 0)
-                        
-                        subquery = IntPoint.newRangeQuery(field, lower, upper)
+                        pass
                 else:
-                    # Gestione virgolette come AND
                     if value.startswith('"') and value.endswith('"'):
                         terms = value.strip('"').split()
                         term_builder = BooleanQuery.Builder()
@@ -194,94 +215,50 @@ class PyLuceneIR:
                             term_builder.add(TermQuery(Term(field, term.lower())), BooleanClause.Occur.MUST)
                         subquery = term_builder.build()
                     else:
-                        subquery = TermQuery(Term(field, value))
+                        subquery = TermQuery(Term(field, value.lower()))
             else:
-                # Gestione virgolette come AND per query senza campo specifico
                 if token.startswith('"') and token.endswith('"'):
                     terms = token.strip('"').split()
-                    # Query per title
+                    combined_builder = BooleanQuery.Builder()
                     title_builder = BooleanQuery.Builder()
                     for term in terms:
                         title_builder.add(TermQuery(Term("title", term.lower())), BooleanClause.Occur.MUST)
-                        processed_term = preprocess_text(term)
-                        if processed_term:
-                            title_builder.add(TermQuery(Term("processed_title", processed_term)), BooleanClause.Occur.MUST)
-                    
-                    # Query per description
+                        title_builder.add(TermQuery(Term("processed_title", preprocess_text(term))), BooleanClause.Occur.MUST)
                     desc_builder = BooleanQuery.Builder()
                     for term in terms:
                         desc_builder.add(TermQuery(Term("description", term.lower())), BooleanClause.Occur.MUST)
-                        processed_term = preprocess_text(term)
-                        if processed_term:
-                            desc_builder.add(TermQuery(Term("processed_description", processed_term)), BooleanClause.Occur.MUST)
-                    
-                    # Combina title e description con OR
-                    combined_builder = BooleanQuery.Builder()
+                        desc_builder.add(TermQuery(Term("processed_description", preprocess_text(term))), BooleanClause.Occur.MUST)
                     combined_builder.add(title_builder.build(), BooleanClause.Occur.SHOULD)
                     combined_builder.add(desc_builder.build(), BooleanClause.Occur.SHOULD)
                     subquery = combined_builder.build()
                 else:
-                    if ">=" in token or ">" in token or "<=" in token or "<" in token:
-                        op = None
-                        field = None
-                        if ">=" in token:
-                            field, num_val = token.split(">=", 1)
-                            op = ">="
-                        elif ">" in token:
-                            field, num_val = token.split(">", 1)
-                            op = ">"
-                        elif "<=" in token:
-                            field, num_val = token.split("<=", 1)
-                            op = "<="
-                        elif "<" in token:
-                            field, num_val = token.split("<", 1)
-                            op = "<"
-
-                        try:
-                            num_val = int(num_val)
-                        except ValueError:
-                            num_val = None
-
-                        if num_val is not None:
-                            if op in (">", ">="):
-                                lower = num_val + (1 if op == ">" else 0)
-                                upper = 2147483647
-                            else:
-                                lower = -2147483648
-                                upper = num_val - (1 if op == "<" else 0)
-                            
-                            subquery = IntPoint.newRangeQuery(field, lower, upper)
-                    else:
-                        subquery = TermQuery(Term("title", token))
+                    subquery = TermQuery(Term("title", token.lower()))
 
             if subquery is not None:
-                builder.add(subquery, current_operator)
-                current_operator = BooleanClause.Occur.MUST
-
+                # Se force_should è True e l'operatore corrente non è NOT, forza l'uso di SHOULD
+                if force_should and current_operator != BooleanClause.Occur.MUST_NOT:
+                    builder.add(subquery, BooleanClause.Occur.SHOULD)
+                else:
+                    builder.add(subquery, current_operator)
+            # Non resettiamo current_operator qui per mantenere l'operatore corrente
         return builder.build()
 
     @staticmethod
     def search_index(query_str, max_results=10, ranking_method="1"):
-        # Cerca nell'indice usando la query costruita e imposta il ranking in base al numero scelto
-        from org.apache.lucene.index import DirectoryReader
-        from org.apache.lucene.search import IndexSearcher
-
         PyLuceneIR.init_lucene()
-
         index_dir = FSDirectory.open(Paths.get(PyLuceneIR.MAIN_INDEX))
         reader = DirectoryReader.open(index_dir)
         searcher = IndexSearcher(reader)
         analyzer = StandardAnalyzer()
-        query = PyLuceneIR.build_query(query_str, analyzer)
 
+        query = PyLuceneIR.build_query(query_str, analyzer)
         if ranking_method == "2":
             searcher.setSimilarity(ClassicSimilarity())
         else:
             searcher.setSimilarity(BM25Similarity())
-
         hits = searcher.search(query, max_results).scoreDocs
-
         results = []
+
         for hit in hits:
             doc = searcher.storedFields().document(hit.doc)
             results.append({
@@ -298,13 +275,27 @@ class PyLuceneIR:
         return results
 
 if __name__ == "__main__":
-    # Esegue l'indicizzazione e consente ricerche con ranking scelto tramite numero
     PyLuceneIR.create_index()
-    query_input = input("Inserisci la query di ricerca: ")
-    ranking_input = input("Inserisci il metodo di ranking (1 per BM25, 2 per TFIDF): ")
-    risultati = PyLuceneIR.search_index(query_input, ranking_method=ranking_input)
-    for idx, doc in enumerate(risultati, 1):
-        print(f"RIS. {idx}: {doc['title']} [{doc['media_type']}]")
+    
+    original_query = input("INSERISCI LA QUERY DI RICERCA: ")
+    corrected_query = PyLuceneIR.check_spelling(original_query)
+    
+    print(f"\n--[DEBUG MESSAGE] Eseguo il parsing della query: {corrected_query}")
+    ranking = input("SCEGLI IL METODO DI RANKING (1 = BM25, 2 = TFIDF): ")
+    
+    results = PyLuceneIR.search_index(corrected_query, ranking_method=ranking)
+    
+    for idx, doc in enumerate(results, 1):
+        # Mappatura del media_type: "tv" → "TV SHOW", "movie" → "MOVIE"
+        media = doc.get("media_type", "UNKNOWN")
+        if media.lower() == "tv":
+            media_str = "TV SHOW"
+        elif media.lower() == "movie":
+            media_str = "MOVIE"
+        else:
+            media_str = media.upper()
+        print(f"\nRISULTATO {idx}: {doc}")
+        print(f"RIS. {idx}: {doc['title']} [{media_str}]")
         print(f"ANNO DI USCITA: {doc['release_year']}")
         print(f"GENERI: {doc['genres']}")
         print(f"VALUTAZIONE MEDIA: {doc['average_rating']}")
