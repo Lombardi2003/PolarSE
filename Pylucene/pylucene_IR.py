@@ -1,6 +1,6 @@
 # DESCRIZIONE: Script che gestisce l'intero motore creato in PyLucene
     # Crea un indice e cerca in PyLucene, da un dataset di film e serie TV in JSON.
-    # Ordina con BM25, ma consente ranking personalizzabile!
+    # Ordina con BM25, ma consente ranking TF-IDF.
 
 import os
 import json
@@ -16,7 +16,7 @@ from org.apache.lucene.search import IndexSearcher, BooleanQuery, BooleanClause,
 from org.apache.lucene.search.similarities import BM25Similarity, ClassicSimilarity
 from org.apache.lucene.search.spell import SpellChecker, LuceneDictionary
 
-# NLTK imports per preprocessing testuale
+# NLTK per preprocessing testuale
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
@@ -49,14 +49,17 @@ class PyLuceneIR:
 
     @staticmethod
     def prepare_index_dir():
+
         # Elimino l'indice esistente e creo le cartelle per il nuovo indice
         if os.path.exists(PyLuceneIR.INDEX_PATH):
             shutil.rmtree(PyLuceneIR.INDEX_PATH)
         os.makedirs(PyLuceneIR.MAIN_INDEX, exist_ok=True)
         os.makedirs(PyLuceneIR.SPELLCHECKER_INDEX, exist_ok=True)
+        
 
     @staticmethod
     def create_index():
+
         PyLuceneIR.init_lucene()
         PyLuceneIR.prepare_index_dir()
 
@@ -88,10 +91,10 @@ class PyLuceneIR:
                 doc.add(TextField("description", description, Field.Store.YES))
                 doc.add(TextField("processed_description", preprocess_text(description), Field.Store.NO))
                 
-                # Usa il campo "media_type" se presente, altrimenti "type"
-                media_type = data.get("media_type", data.get("type", "UNKNOWN"))
-                doc.add(StoredField("media_type", media_type))
-                doc.add(TextField("media_type_txt", media_type, Field.Store.NO))
+                # Usa il campo "type" presente nel JSON
+                type_val = data.get("type", "UNKNOWN")
+                doc.add(StoredField("type", type_val))
+                doc.add(TextField("type_txt", type_val, Field.Store.NO))
                 
                 genres = data.get("genres", [])
                 genres_str = ", ".join(genres) if isinstance(genres, list) else str(genres)
@@ -133,9 +136,10 @@ class PyLuceneIR:
         
         reader.close()
         spell_checker.close()
-
+        
         print("Indici creati con successo")
-
+        
+    
     @staticmethod
     def check_spelling(query):
         PyLuceneIR.init_lucene()
@@ -148,16 +152,16 @@ class PyLuceneIR:
                 field, value = part.split(':', 1)
                 suggestions = spell_checker.suggestSimilar(value, 1)
                 if suggestions:
-                    choice = input(f"Intendevi '{field}:{suggestions[0]}' invece di '{part}'? (y/n): ")
-                    corrected = f"{field}:{suggestions[0]}" if choice.lower() == 'y' else part
+                    choice = input(f"INTENDEVI '{field}:{suggestions[0]}' INVECE DI '{part}'? (s/n): ")
+                    corrected = f"{field}:{suggestions[0]}" if choice.lower() == 's' else part
                     corrected_parts.append(corrected)
                 else:
                     corrected_parts.append(part)
             else:
                 suggestions = spell_checker.suggestSimilar(part, 1)
                 if suggestions:
-                    choice = input(f"Intendevi '{suggestions[0]}' invece di '{part}'? (y/n): ")
-                    corrected_parts.append(suggestions[0] if choice.lower() == 'y' else part)
+                    choice = input(f"INTENDEVI '{suggestions[0]}' INVECE DI '{part}'? (s/n): ")
+                    corrected_parts.append(suggestions[0] if choice.lower() == 's' else part)
                 else:
                     corrected_parts.append(part)
         
@@ -186,7 +190,7 @@ class PyLuceneIR:
 
             if ":" in token:
                 field, value = token.split(":", 1)
-                # Se il campo è "genres", mappo su "genres_txt"
+                # Se il campo è "genres", mappalo su "genres_txt"
                 if field.lower() == "genres":
                     field = "genres_txt"
                 if any(value.startswith(op) for op in (">=", ">", "<=", "<")):
@@ -219,20 +223,24 @@ class PyLuceneIR:
                     combined_builder = BooleanQuery.Builder()
                     title_builder = BooleanQuery.Builder()
                     for term in terms:
-                        title_builder.add(TermQuery(Term("title", term.lower())), BooleanClause.Occur.MUST)
-                        title_builder.add(TermQuery(Term("processed_title", preprocess_text(term))), BooleanClause.Occur.MUST)
+                        title_builder.add(TermQuery(Term("processed_title", term.lower())), BooleanClause.Occur.MUST)
                     desc_builder = BooleanQuery.Builder()
                     for term in terms:
-                        desc_builder.add(TermQuery(Term("description", term.lower())), BooleanClause.Occur.MUST)
-                        desc_builder.add(TermQuery(Term("processed_description", preprocess_text(term))), BooleanClause.Occur.MUST)
+                        desc_builder.add(TermQuery(Term("processed_description", term.lower())), BooleanClause.Occur.MUST)
                     combined_builder.add(title_builder.build(), BooleanClause.Occur.SHOULD)
                     combined_builder.add(desc_builder.build(), BooleanClause.Occur.SHOULD)
                     subquery = combined_builder.build()
                 else:
-                    subquery = TermQuery(Term("title", token.lower()))
+                    # Cerca in entrambi i campi processed_title e processed_description
+                    title_query = TermQuery(Term("processed_title", token.lower()))
+                    desc_query = TermQuery(Term("processed_description", token.lower()))
+                    combined_builder = BooleanQuery.Builder()
+                    combined_builder.add(title_query, BooleanClause.Occur.SHOULD)
+                    combined_builder.add(desc_query, BooleanClause.Occur.SHOULD)
+                    subquery = combined_builder.build()
 
             if subquery is not None:
-                # Se force_should è vero e l'operatore corrente non è NOT, forzo l'uso di SHOULD
+                # Se force_should è vero e l'operatore corrente non è NOT, forza l'uso di SHOULD
                 if force_should and current_operator != BooleanClause.Occur.MUST_NOT:
                     builder.add(subquery, BooleanClause.Occur.SHOULD)
                 else:
@@ -263,7 +271,7 @@ class PyLuceneIR:
                 "description": doc.get("description"),
                 "release_year": doc.get("release_year"),
                 "average_rating": doc.get("average_rating"),
-                "media_type": doc.get("media_type"),
+                "type": doc.get("type"),
                 "genres": doc.get("genres"),
                 "score": hit.score
             })
@@ -274,24 +282,23 @@ class PyLuceneIR:
 if __name__ == "__main__":
     PyLuceneIR.create_index()
     
-    original_query = input("Inserisci la query di ricerca: ")
+    original_query = input("\nINSERISCI LA QUERY DI RICERCA: ")
     corrected_query = PyLuceneIR.check_spelling(original_query)
     
-    print(f"\nEsecuzione ricerca con query: {corrected_query}")
-    ranking = input("Scegli il ranking (1=BM25, 2=TFIDF): ")
+    print("\nSCEGLI IL METODO DI RANKING DEI RISULTATI:")
+    ranking = input("1 BM25, predefinito di PyLucene\n2 TF-IDF, per confronto con PostgreSQL (1/2): ")
     
     results = PyLuceneIR.search_index(corrected_query, ranking_method=ranking)
     
     for idx, doc in enumerate(results, 1):
-        # Controllo il media_type: "tv" → "TV SHOW", "movie" → "MOVIE"
-        media = doc.get("media_type", "UNKNOWN")
-        if media.lower() == "tv":
-            media_str = "TV SHOW"
-        elif media.lower() == "movie":
-            media_str = "MOVIE"
+        t = doc.get("type", "UNKNOWN")
+        if t.lower() == "tv":
+            type_str = "TV SHOW"
+        elif t.lower() == "movie":
+            type_str = "MOVIE"
         else:
-            media_str = media.upper()
-        print(f"\nRIS. {idx}: {doc['title']} [{media_str}]")
+            type_str = t.upper()
+        print(f"\nRIS. {idx}: {doc['title']} [{type_str}]")
         print(f"ANNO DI USCITA: {doc['release_year']}")
         print(f"GENERI: {doc['genres']}")
         print(f"VALUTAZIONE MEDIA: {doc['average_rating']}")
