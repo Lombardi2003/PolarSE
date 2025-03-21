@@ -19,10 +19,10 @@ def db_connection(config):
         return None
 
 def main():
-    database = DatabaseConfig()
-    conn = db_connection(database)
-    print(database.get_name())
-    # Close the connection
+    database = DatabaseConfig()    # Create a new database configuration
+    conn = db_connection(database) # Connect to the database
+
+    #  Close the connection
     if conn:
         conn.close()
 
