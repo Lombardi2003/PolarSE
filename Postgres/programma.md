@@ -4,7 +4,7 @@ Qui inseriamo tutte le cose da fare, un programma da realizzare passo passo:
 1. **Configurazione Database 🗄️**
     - [X] Configurare un file .json che contenga tutti i dati di connessione al database 🔐
 2. **Creazione e popolazione del DB 🛠️**
-    - [ ] Consolidare la funzione per la creazione del database → per la creazione consolidare i tipi di dato che andiamo ad utilizzare nelle colonne della tabella 📊
+    - [X] Consolidare la funzione per la creazione del database → per la creazione consolidare i tipi di dato che andiamo ad utilizzare nelle colonne della tabella 📊
     - [X] Creazione della funzione di connessione 🔗
     - [ ] Consolidare la funzione per la popolazione del database e controllare che ogni dato rispetti i tipi di dato 🧐
 3. **Ricerca e modifica globale del programma 🔍**
