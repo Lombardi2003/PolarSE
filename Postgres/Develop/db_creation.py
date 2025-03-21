@@ -17,3 +17,6 @@ def create_db(database):
         print(f"Database {database.DB_NAME} creato con successo.")
     except Exception as e:
         print(f"Errore durante la creazione del database: {e}")
+
+def create_table(conn):
+    pass
