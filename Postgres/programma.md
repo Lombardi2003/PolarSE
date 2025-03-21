@@ -7,8 +7,9 @@ Qui inseriamo tutte le cose da fare, un programma da realizzare passo passo:
     - [X] Verificare e modificare gli script affinchè vengano utilizzati più moduli per aveere un ordine generale migliore 🔄
     ![Struttura](struttura.jpg)
 3. **Creazione e popolazione del DB 🛠️**
-    - [X] Consolidare la funzione per la creazione del database → per la creazione consolidare i tipi di dato che andiamo ad utilizzare nelle colonne della tabella 📊
+    - [X] Consolidare la funzione per la creazione del database 💾
     - [X] Creazione della funzione di connessione 🔗
+    - [ ] Creazione delle tabelle consolidando i tipi di dato all'interno delle colonne 📊
     - [ ] Consolidare la funzione per la popolazione del database e controllare che ogni dato rispetti i tipi di dato 🧐
 4. **Ricerca e modifica globale del programma 🔍**
     - [X] Stabilire se tenerlo come un modulo di funzioni o creare una Classe (studio dei vantaggi e degli svantaggi) 🧩
