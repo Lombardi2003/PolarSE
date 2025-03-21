@@ -9,7 +9,7 @@ Qui inseriamo tutte le cose da fare, un programma da realizzare passo passo:
     - [ ] Consolidare la funzione per la popolazione del database e controllare che ogni dato rispetti i tipi di dato 🧐
 3. **Ricerca e modifica globale del programma 🔍**
     - [X] Stabilire se tenerlo come un modulo di funzioni o creare una Classe (studio dei vantaggi e degli svantaggi) 🧩
-    - [X] Passaggio alle classi eseguito
+    - [X] Passaggio alle classi eseguito 📜
 4. **Indicizzazione 🏷️**
     - [ ] Studiare se utilizzare degli indici, se si creare e consolidare la funzione per la creazione di indici 📑
 5. **Tokenizzazione 🧠**
