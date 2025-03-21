@@ -5,10 +5,11 @@ Qui inseriamo tutte le cose da fare, un programma da realizzare passo passo:
     - [X] Configurare un file .json che contenga tutti i dati di connessione al database 🔐
 2. **Creazione e popolazione del DB 🛠️**
     - [ ] Consolidare la funzione per la creazione del database → per la creazione consolidare i tipi di dato che andiamo ad utilizzare nelle colonne della tabella 📊
-    - [ ] Creazione della funzione di connessione 🔗
+    - [X] Creazione della funzione di connessione 🔗
     - [ ] Consolidare la funzione per la popolazione del database e controllare che ogni dato rispetti i tipi di dato 🧐
 3. **Ricerca e modifica globale del programma 🔍**
-    - [ ] Stabilire se tenerlo come un modulo di funzioni o creare una Classe (studio dei vantaggi e degli svantaggi) 🧩
+    - [X] Stabilire se tenerlo come un modulo di funzioni o creare una Classe (studio dei vantaggi e degli svantaggi) 🧩
+    - [X] Passaggio alle classi eseguito
 4. **Indicizzazione 🏷️**
     - [ ] Studiare se utilizzare degli indici, se si creare e consolidare la funzione per la creazione di indici 📑
 5. **Tokenizzazione 🧠**
