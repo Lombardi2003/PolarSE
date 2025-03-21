@@ -20,5 +20,3 @@ class DatabaseConfig:
         self.PORT_NUMBER = data['NETWORK_SETTINGS']['PORT_NUMBER']
         self.RECONNECT_INTERVAL = data['NETWORK_SETTINGS']['RECONNECT_INTERVAL']
         self.RECONNECT_ATTEMPTS = data['NETWORK_SETTINGS']['RECONNECT_ATTEMPTS']
-    def get_name(self):
-        return self.DB_NAME
