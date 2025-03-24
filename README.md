@@ -59,5 +59,12 @@ All'avvio, il programma esegue i seguenti passaggi:
 - **Whoosh** 🔍
 
 ---
+# Calendario delle scadenze:
+- **09/04/2015**: Finire tutti e 3 i Search Engines con la funzionalità aggiuntiva
+- **05/05/2025**: Unione dei Search Engines
+- **12/05/2025**: Fix errors
+- **19/05/2025**: Benchmark
+- **26/05/2025**: PowerPoint
+---
 
 💬 Se hai domande, dubbi o hai bisogno di supporto, non esitare a **contattarci**! 💬
