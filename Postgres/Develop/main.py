@@ -21,6 +21,8 @@ def db_connection(config):
             time.sleep(3)  # Attendi 1 secondo
             os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
             print("Connessione al database stabilita con successo.\n")
+            os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
+            print("Connessione al database stabilita con successo.\n")
             return conn  # Connessione riuscita, restituisce connessione
         except Exception as e:
             print(f"Errore di connessione: {e}")
