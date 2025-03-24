@@ -39,7 +39,7 @@ def create_table(conn):
                 """
                 cursor.execute(create_table_query)
                 conn.commit()  # Ensure changes are committed to the database
-                print("Tabella 'dataset' creata con successo.")
+                print("Tabella 'dataset' caricata con successo.")
         except Exception as e:
             print(f"Errore nella creazione della tabella: {e}")
 
@@ -75,4 +75,4 @@ def popolate_table(conn):
                         conn.commit()
                 print("\nDati inseriti con successo.")
         except Exception as e:
-            print(f"\nErrore durante l'inserimento dei dati: {e}")
+            print(f"\nErrore durante l'inserimento dei dati: la Tabella è già popolata")

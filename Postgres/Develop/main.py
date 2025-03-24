@@ -2,6 +2,7 @@ from database_config import DatabaseConfig
 from db_setup import create_db, create_table, popolate_table
 import psycopg2
 import time
+import os
 
 # DB connection
 def db_connection(config):
@@ -15,7 +16,8 @@ def db_connection(config):
                 host=config.IP_ADDRESS,
                 port=config.PORT_NUMBER
             )
-            print("Connessione stabilita con successo.\n")
+            os.system('clear')  # Pulisce la console
+            print("Connessione al database stabilita con successo.\n")
             return conn  # Connessione riuscita, restituisce connessione
         except Exception as e:
             print(f"Errore di connessione: {e}")
@@ -34,6 +36,7 @@ def main():
     database = DatabaseConfig()    # Create a new database configuration
     conn = db_connection(database) # Connect to the database
     if conn is None:  
+        os.system('clear')
         print("Creazione del database in corso...\n")
         create_db(database) # Avvia lo script di creazione del DB
         conn = db_connection(database)  # Riprova a connettersi dopo la creazione
