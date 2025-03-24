@@ -1,5 +1,5 @@
 from database_config import DatabaseConfig
-from db_creation import create_db, create_table, popolate_table
+from db_setup import create_db, create_table, popolate_table
 import psycopg2
 import time
 
