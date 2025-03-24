@@ -34,9 +34,9 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 ---
 
 ## 📦 **Configurazioni**:
-- **PostgresSQL**
-- **SQL**
-- **PostgresSQL**
+### **PostgresSQL**
+### **SQL**
+### **PostgresSQL**
 
 ## 📝 **Istruzioni**
 All'avvio, il programma esegue i seguenti passaggi:
