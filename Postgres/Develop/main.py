@@ -18,7 +18,7 @@ def db_connection(config):
                 host=config.IP_ADDRESS,
                 port=config.PORT_NUMBER
             )
-            os.system('clear')  # Pulisce la console
+            os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
             print("Connessione al database stabilita con successo.\n")
             return conn  # Connessione riuscita, restituisce connessione
         except Exception as e:
@@ -38,7 +38,7 @@ def main():
     database = DatabaseConfig()    # Create a new database configuration
     conn = db_connection(database) # Connect to the database
     if conn is None:  
-        os.system('clear')
+        os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
         print("Creazione del database in corso...\n")
         create_db(database) # Avvia lo script di creazione del DB
         conn = db_connection(database)  # Riprova a connettersi dopo la creazione
