@@ -1,0 +1,3 @@
+# Ignore the dataset folder and its contents
+Dataset/
+__pycache__
