@@ -20,6 +20,6 @@ def create_indexes(conn):
                 # Indice per ricerca veloce su type
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_type ON dataset (type);")
                 conn.commit()
-                print("Indici creati con successo!")
+                print("Indici creati con successo.")
         except Exception as e:
             print(f"Errore nella creazione degli indici: gli indici che vuoi creare potrebbero già esistere.")
