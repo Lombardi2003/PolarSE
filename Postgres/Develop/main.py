@@ -18,9 +18,8 @@ def db_connection(config):
                 host=config.IP_ADDRESS,
                 port=config.PORT_NUMBER
             )
-            time.sleep(3)  # Attendi 1 secondo
-            os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
             print("Connessione al database stabilita con successo.\n")
+            time.sleep(3)  # Attendi 1 secondo
             os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
             print("Connessione al database stabilita con successo.\n")
             return conn  # Connessione riuscita, restituisce connessione
