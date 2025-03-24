@@ -15,7 +15,7 @@ Qui inseriamo tutte le cose da fare, un programma da realizzare passo passo:
     - [X] Stabilire se tenerlo come un modulo di funzioni o creare una Classe (studio dei vantaggi e degli svantaggi) 🧩
     - [X] Passaggio alle classi eseguito 📜
 5. **Indicizzazione 🏷️**
-    - [ ] Studiare se utilizzare degli indici, se si creare e consolidare la funzione per la creazione di indici 📑
+    - [X] Studiare se utilizzare degli indici, se si creare e consolidare la funzione per la creazione di indici 📑
 6. **Tokenizzazione 🧠**
     - [ ] Vedere quando applicare l'NLTK al motore di ricerca 📚
     - [ ] Se è il momento creare il tokenizzatore 📝
