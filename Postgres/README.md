@@ -9,8 +9,8 @@ Qui inseriamo tutte le cose da fare, un programma da realizzare passo passo:
 3. **Creazione e popolazione del DB 🛠️**
     - [X] Consolidare la funzione per la creazione del database 💾
     - [X] Creazione della funzione di connessione 🔗
-    - [ ] Creazione delle tabelle consolidando i tipi di dato all'interno delle colonne 📊
-    - [ ] Consolidare la funzione per la popolazione del database e controllare che ogni dato rispetti i tipi di dato 🧐
+    - [X] Creazione delle tabelle consolidando i tipi di dato all'interno delle colonne 📊
+    - [X] Consolidare la funzione per la popolazione del database e controllare che ogni dato rispetti i tipi di dato 🧐
 4. **Ricerca e modifica globale del programma 🔍**
     - [X] Stabilire se tenerlo come un modulo di funzioni o creare una Classe (studio dei vantaggi e degli svantaggi) 🧩
     - [X] Passaggio alle classi eseguito 📜
@@ -33,4 +33,4 @@ Qui inseriamo tutte le cose da fare, un programma da realizzare passo passo:
     - [ ] Stabilire la funzionalità aggiuntiva 🎯
     - [ ] Realizzare la funzionalità aggiuntiva 🏁
 12. **(Bonus) 🎁**
-    - [ ] Realizzare e modificare una lieve interfaccia grafica da terminale che faccia vedere una barra di caricamento per la popolazione e la creazione del DB ⏳
+    - [X] Realizzare e modificare una lieve interfaccia grafica da terminale che faccia vedere una barra di caricamento per la popolazione del DB ⏳
