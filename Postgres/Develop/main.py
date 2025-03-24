@@ -1,5 +1,5 @@
 from database_config import DatabaseConfig
-from db_creation import create_db, create_table
+from db_creation import create_db, create_table, popolate_table
 import psycopg2
 import time
 
@@ -24,6 +24,12 @@ def db_connection(config):
     print("Connessione non riuscita dopo 7 tentativi.\n")
     return None  # Restituisce None se non riesce a connettersi
 
+# DB close connection
+def close_connection(conn):
+    if conn:
+        conn.close()
+        print("Connessione chiusa con successo.")
+
 def main():
     database = DatabaseConfig()    # Create a new database configuration
     conn = db_connection(database) # Connect to the database
@@ -36,9 +42,11 @@ def main():
     # Creazione della tabella
     create_table(conn)
     
+    # Popolamento della tabella
+    popolate_table(conn)
+
     #  Close the connection
-    if conn:
-        conn.close()
+    close_connection(conn)
 
 if __name__ == '__main__':
     main()

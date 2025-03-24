@@ -1,4 +1,6 @@
 import psycopg2
+import os
+import json
 
 def create_db(database):
     try:   
@@ -39,3 +41,30 @@ def create_table(conn):
                 print("Tabella 'dataset' creata con successo.")
         except Exception as e:
             print(f"Errore nella creazione della tabella: {e}")
+
+def popolate_table(conn):
+    data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "Dataset")
+    if conn:
+        try:
+            with conn.cursor() as cursor:
+                a = 0
+                for file_name in os.listdir(data_folder):
+                    a+=1; print(a)
+                    if file_name.endswith(".json"):
+                        with open(f"{data_folder}/{file_name}", "r", encoding="utf-8") as file:
+                            data = json.load(file)
+                            id, title, release_year, genres_list, average_rating, description, type = data.values()
+                            # Convert genres list to string
+                            genres = ', '.join(genres_list)
+                            # Modify date if it's empty
+                            if release_year == "":
+                                release_year = -1
+                            insert_query = """
+                            INSERT INTO dataset (id, title, release_year, genres, average_rating, description, type)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s);
+                            """
+                            cursor.execute(insert_query, (id, title, int(release_year), genres, average_rating, description, type))
+                            conn.commit()
+                print("Dati inseriti con successo.")
+        except Exception as e:
+            print(f"Errore durante l'inserimento dei dati: {e}")
