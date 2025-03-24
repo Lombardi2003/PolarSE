@@ -35,8 +35,8 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 
 ## 📦 **Configurazioni**:
 ### **PostgresSQL**
-### **SQL**
-### **PostgresSQL**
+### **Whoosh**
+### **Pylucene**
 
 ---
 
