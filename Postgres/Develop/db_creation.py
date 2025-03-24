@@ -62,7 +62,7 @@ def popolate_table(conn):
                             insert_query = """
                             INSERT INTO dataset (id, title, release_year, genres, average_rating, description, type)
                             VALUES (%s, %s, %s, %s, %s, %s, %s);
-                            """
+                            """     # %s is a placeholder for the values (to prevent SQL injection). The DB driver automaticcaly converts the values to the correct SQL format.
                             cursor.execute(insert_query, (id, title, int(release_year), genres, average_rating, description, type))
                             conn.commit()
                 print("Dati inseriti con successo.")
