@@ -1,7 +1,7 @@
 import psycopg2
 import os
 import json
-from tqdm import tqdm  # Importiamo tqdm per la barra di caricamento
+from tqdm import tqdm  # This library is used to show progress bars
 
 def create_db(database):
     try:   
