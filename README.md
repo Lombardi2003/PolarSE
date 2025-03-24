@@ -6,7 +6,7 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 
 ---
 
-### 🧑‍💻 **Creato da:**
+## 🧑‍💻 **Creato da:**
 - **Checola Francesca Rosa (MATR. 180957 -- 324595@studenti.unimore.it)**
 - **Cocciardi Daniele Silvestro (MATR. 142029 -- 275438@studenti.unimore.it)**
 - **Gnaccarini Susanna (MATR. 184144 -- 326451@studenti.unimore.it)** 
@@ -33,23 +33,10 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 
 ---
 
-## ⚙️ **Requisiti**
-
-### 📦 **Librerie e Strumenti Necessari**:
-- **Python 3.8+**
-
-- Librerie Python:
-  - `lucene` 🔍
-  - `whoosh` 🔍
-  - `NLTK` 🔍
-  - `psycopg2` 🗃️
-  - `requests` 🌐
-  - `tqdm` ⏳
-
-- **PostgreSQL**:
-  - ?????????????????????????
-
----
+## 📦 **Configurazioni**:
+- **PostgresSQL**
+- **SQL**
+- **PostgresSQL**
 
 ## 📝 **Istruzioni**
 All'avvio, il programma esegue i seguenti passaggi:
@@ -68,7 +55,8 @@ All'avvio, il programma esegue i seguenti passaggi:
 - **Python** 🐍
 - **TMDb API** 🎬
 - **PostgreSQL** 🗃️
-- **Lucene & Whoosh** 🔍
+- **Lucene** 🔍
+- **Whoosh** 🔍
 
 ---
 
