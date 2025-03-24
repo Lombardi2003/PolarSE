@@ -1,5 +1,7 @@
 from database_config import DatabaseConfig
 from db_setup import create_db, create_table, popolate_table
+from indexing import create_indexes
+
 import psycopg2
 import time
 import os
@@ -48,7 +50,10 @@ def main():
     # Popolamento della tabella
     popolate_table(conn)
 
-    #  Close the connection
+    # Creazione degli indici
+    create_indexes(conn)
+
+    # Close the connection
     close_connection(conn)
 
 if __name__ == '__main__':
