@@ -38,6 +38,8 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 ### **SQL**
 ### **PostgresSQL**
 
+---
+
 ## 📝 **Istruzioni**
 All'avvio, il programma esegue i seguenti passaggi:
 1. **Verifica della presenza del dataset**
