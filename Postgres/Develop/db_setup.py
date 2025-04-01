@@ -64,18 +64,22 @@ def popolate_table(conn):
                     with open(file_path, "r", encoding="utf-8") as file:
                         data = json.load(file)
                         id, title, release_year, genres_list, average_rating, description, type = data.values()
+
+                        processed_title = title
+                        processed_description = description
+
                         # Convert genres list to string
                         genres = ', '.join(genres_list)
                         # Modify date if it's empty
                         if release_year == "":
                             release_year = -1
                         insert_query = """
-                        INSERT INTO dataset (id, title, release_year, genres, average_rating, description, type)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s);
+                        INSERT INTO dataset (id, title, release_year, genres, average_rating, description, type, processed_description, processed_title)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
                         """     # %s is a placeholder for the values (to prevent SQL injection). The DB driver automaticcaly converts the values to the correct SQL format.
-                        cursor.execute(insert_query, (id, title, int(release_year), genres, average_rating, description, type))
+                        cursor.execute(insert_query, (id, title, int(release_year), genres, average_rating, description, type, processed_description, processed_title))
                         # Copy the description and title to the processed columns
-                        cursor.execute("UPDATE dataset SET processed_description = description, processed_title = title WHERE id = %s;", (id,))
+                        #cursor.execute("UPDATE dataset SET processed_description = description, processed_title = title WHERE id = %s;", (id,))
                         # Commit the changes to the database
                         conn.commit()
                 print("\nDati inseriti con successo.")
