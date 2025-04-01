@@ -35,6 +35,8 @@ def create_table(conn):
                     average_rating REAL,
                     description TEXT,
                     type TEXT
+                    processed_description TEXT,
+                    processed_title TEXT,
                 );
                 """
                 cursor.execute(create_table_query)
@@ -72,6 +74,9 @@ def popolate_table(conn):
                         VALUES (%s, %s, %s, %s, %s, %s, %s);
                         """     # %s is a placeholder for the values (to prevent SQL injection). The DB driver automaticcaly converts the values to the correct SQL format.
                         cursor.execute(insert_query, (id, title, int(release_year), genres, average_rating, description, type))
+                        # Copy the description and title to the processed columns
+                        cursor.execute("UPDATE dataset SET processed_description = description, processed_title = title WHERE id = %s;", (id,))
+                        # Commit the changes to the database
                         conn.commit()
                 print("\nDati inseriti con successo.")
         except Exception as e:

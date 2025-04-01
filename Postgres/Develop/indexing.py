@@ -19,6 +19,11 @@ def create_indexes(conn):
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_description ON dataset USING GIN(to_tsvector('english', description));")
                 # Indice per ricerca veloce su type
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_type ON dataset (type);")
+                # Indice Full-Text Search su processed_title
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_processed_title ON dataset USING GIN(to_tsvector('english', processed_title));")
+                # Indice Full-Text Search su processed_description
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_processed_description ON dataset USING GIN(to_tsvector('english', processed_description));")
+                # Commit delle modifiche al db
                 conn.commit()
                 print("Indici creati con successo.")
         except Exception as e:
