@@ -17,8 +17,8 @@ Qui inseriamo tutte le cose da fare, un programma da realizzare passo passo:
 5. **Indicizzazione 🏷️**
     - [X] Studiare se utilizzare degli indici, se si creare e consolidare la funzione per la creazione di indici 📑
 6. **Tokenizzazione 🧠**
-    - [ ] Vedere quando applicare l'NLTK al motore di ricerca 📚
-    - [ ] Se è il momento creare il tokenizzatore 📝
+    - [X] Vedere quando applicare l'NLTK al motore di ricerca 📚
+    - [X] Se è il momento creare il tokenizzatore 📝
 7. **Search Engines 💡**
     - [ ] Capire il motore di ricerca di Postgres di default (ranking di default) 🤖
     - [ ] Realizzazione del modulo di ricerca per Postgres 🧑‍💻
