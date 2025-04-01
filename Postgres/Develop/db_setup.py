@@ -34,9 +34,9 @@ def create_table(conn):
                     genres TEXT,
                     average_rating REAL,
                     description TEXT,
-                    type TEXT
+                    type TEXT,
                     processed_description TEXT,
-                    processed_title TEXT,
+                    processed_title TEXT
                 );
                 """
                 cursor.execute(create_table_query)

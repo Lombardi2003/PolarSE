@@ -1,6 +1,7 @@
 import json
+import os
 
-FILE_PATH = 'postgres.json'  # File path
+FILE_PATH = os.path.join(os.path.dirname(__file__), 'postgres.json')  # File path
 
 class DatabaseConfig:
     def __init__(self):
