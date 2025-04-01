@@ -1,6 +1,7 @@
 from database_config import DatabaseConfig
 from db_setup import create_db, create_table, popolate_table
 from indexing import create_indexes
+from postgres_nltk import setup_nltk  # Import the setup function from postgres_nltk.py
 
 import psycopg2
 import time
@@ -37,6 +38,8 @@ def close_connection(conn):
         print("Connessione chiusa con successo.")
 
 def main():
+    setup_nltk()  # Setup NLTK data files
+    time.sleep(2)
     os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
     database = DatabaseConfig()    # Create a new database configuration
     conn = db_connection(database) # Connect to the database

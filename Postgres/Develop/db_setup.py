@@ -2,6 +2,7 @@ import psycopg2
 import os
 import json
 from tqdm import tqdm  # This library is used to show progress bars
+from postgres_nltk import processing  # Import the processing function from postgres_nltk.py
 
 def create_db(database):
     try:   
@@ -65,8 +66,8 @@ def popolate_table(conn):
                         data = json.load(file)
                         id, title, release_year, genres_list, average_rating, description, type = data.values()
 
-                        processed_title = title
-                        processed_description = description
+                        processed_title = processing(title)
+                        processed_description = processing(description)
 
                         # Convert genres list to string
                         genres = ', '.join(genres_list)
