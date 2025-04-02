@@ -44,7 +44,7 @@ def create_table(conn):
             print(f"Errore nella creazione della tabella: {e}")
 
 def popolate_table(conn):
-    data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "Dataset")
+    data_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Dataset")
     if conn:
         try:
             with conn.cursor() as cursor:
