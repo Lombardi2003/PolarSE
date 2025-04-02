@@ -2,6 +2,7 @@ from database_config import DatabaseConfig
 from db_setup import create_db, create_table, popolate_table
 from indexing import create_indexes
 from postgres_nltk import setup_nltk  # Import the setup function from postgres_nltk.py
+from search_engine import SearchEngine  # Import the SearchEngine class from search_engine.py
 
 import psycopg2
 import time
@@ -59,6 +60,19 @@ def main():
 
     # Creazione degli indici
     create_indexes(conn)
+
+    # Prompt per la scelta del ranking
+    ricerca = SearchEngine(database, conn)  # Create an instance of the SearchEngine class
+    print("Benvenuto nel motore di ricerca!\n")
+    print("Scegli il ranking da utilizzare per la ricerca:")
+    scelta=input("1: TF-IDF\n2: BM25\nSCELTA: ")
+    if scelta == '1':
+        ricerca.tfidf_search()
+    elif scelta == '2':
+        ricerca.bm25_search()
+    else:
+        print("Scelta non valida. Utilizzerò il ranking TF-IDF come predefinito.")
+        ricerca.tfidf_search()
 
     # Close the connection
     close_connection(conn)
