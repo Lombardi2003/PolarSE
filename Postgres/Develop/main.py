@@ -61,8 +61,6 @@ def main():
         # Creazione degli indici
         create_indexes(conn)
     
-    
-
     # Prompt per la scelta del ranking
     ricerca = SearchEngine(database, conn)  # Create an instance of the SearchEngine class
     print("Benvenuto nel motore di ricerca!\n")
@@ -78,10 +76,8 @@ def main():
         else:
             print("Scelta non valida. Utilizzerò il ranking TF-IDF come predefinito.")
             ricerca.tfidf_search()
-
         if result == 0:
             continue
-
         for r in result:
             print(f"\n🎬 {r[0]} ({r[1]}) - Type: {r[4]} - ⭐ Average Rating:  {r[5]}\n   {r[3]}\n   Genere: {r[2]}")
 
