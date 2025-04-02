@@ -2,7 +2,6 @@ import psycopg2
 import os
 import json
 from tqdm import tqdm  # This library is used to show progress bars
-from postgres_nltk import processing  # Import the processing function from postgres_nltk.py
 
 def create_db(database):
     try:   

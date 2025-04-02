@@ -1,7 +1,6 @@
 from database_config import DatabaseConfig
 from db_setup import create_db, create_table, popolate_table
 from indexing import create_indexes
-from postgres_nltk import setup_nltk  # Import the setup function from postgres_nltk.py
 from search_engine import SearchEngine  # Import the SearchEngine class from search_engine.py
 
 import psycopg2
