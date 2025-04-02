@@ -23,7 +23,7 @@ Qui inseriamo tutte le cose da fare, un programma da realizzare passo passo:
     - [X] Capire il motore di ricerca di Postgres di default (ranking di default) 🤖
     - [X] Realizzazione della classe e del modulo di ricerca per Postgres 🧑‍💻
 8. **Testing del motore di ricerca 🧪**
-    - [ ] Utilizzare delle query semplici o dei test per testare ogni cosa ✅
+    - [X] Utilizzare delle query semplici o dei test per testare ogni cosa ✅
     - [X] Se non eseguito prima. creare il tokenizzatore 🖋️
 9. **2° modello di ranking 🏅**
     - [ ] Implementare il secondo modello di ranking 🏆

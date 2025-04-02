@@ -1,6 +1,8 @@
 import os
 import psycopg2
 
+columns = ["title", "description", "genres", "type", "release_year", "average_rating"]
+
 class SearchEngine:
     def __init__(self, db, conn, limit=10):
         self.db = db
@@ -14,8 +16,11 @@ class SearchEngine:
 
     # Implementazione della ricerca TF-IDF
     def tfidf_search(self):
-        text = input("Scegli il campo su cui effettuare la ricerca ([title, description, genres, type]:[valore]): ") 
+        text = input("Scegli il campo su cui effettuare la ricerca ([title, description, genres, type, release_year, average_rating]:[valore]): ") 
         field, search_value = text.split(":")
+        if field not in columns:
+            print("Campo inesistente")
+            return 0
         results = self.execute_ts_rank(field, search_value)
         return results
     
@@ -36,24 +41,50 @@ class SearchEngine:
     #Costruisce la query SQL utilizzando ts_vector, ts_query e ts_rank.
     @staticmethod
     def generate_query(field, search_value):
-        ts_vector = SearchEngine.generate_ts_vector(field)
-        ts_query = "to_tsquery('english', %s)"
-        query = f"""
-        SELECT title, release_year, genres, description, type, average_rating,
-            ts_rank({ts_vector}, {ts_query}) AS rank
-        FROM dataset
-        WHERE {ts_vector} @@ {ts_query}
-        ORDER BY rank DESC
-        LIMIT 10;
-        """
+        if field == "release_year":     # Query per i campi numerici (senza full-text search)
+            query = f"""
+            SELECT title, release_year, genres, description, type, average_rating
+            FROM dataset
+            WHERE {field} = %s
+            ORDER BY {field} DESC
+            LIMIT 10;
+            """
+        elif field == "average_rating":
+            query = f"""
+            SELECT title, release_year, genres, description, type, average_rating,
+                ROUND(average_rating::numeric,1) AS rank  
+            FROM dataset
+            WHERE ROUND(average_rating::numeric,1) = %s  
+            ORDER BY rank DESC
+            LIMIT 10;
+            """
+        else:
+            # Query per i campi testuali con full-text search
+            ts_vector = SearchEngine.generate_ts_vector(field)
+            ts_query = "to_tsquery('english', %s)"
+            query = f"""
+            SELECT title, release_year, genres, description, type, average_rating,
+                ts_rank({ts_vector}, {ts_query}) AS rank
+            FROM dataset
+            WHERE {ts_vector} @@ {ts_query}
+            ORDER BY rank DESC
+            LIMIT 10;
+            """
         return query
     
     # Esegue la query e restituisce i risultati ordinati per ranking.
-    def execute_ts_rank(self, field, search_value):
-        cur = self.conn.cursor()
+    def execute_ts_rank(self, field, search_value):  
+        cur = self.conn.cursor()          
         sql_query = SearchEngine.generate_query(field, search_value)
-        ts_query_value = SearchEngine.generate_ts_query(search_value)
-        cur.execute(sql_query, (ts_query_value, ts_query_value))
+        if field == "release_year":
+            search_value = int(search_value)
+            cur.execute(sql_query, (search_value,))
+        elif field == "average_rating":
+            search_value = float(search_value)
+            cur.execute(sql_query, (search_value,))
+        else:
+            ts_query_value = SearchEngine.generate_ts_query(search_value)
+            cur.execute(sql_query, (ts_query_value, ts_query_value))
         results = cur.fetchall()
         cur.close()        
         return results   

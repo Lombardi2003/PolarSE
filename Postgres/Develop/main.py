@@ -66,20 +66,27 @@ def main():
     # Prompt per la scelta del ranking
     ricerca = SearchEngine(database, conn)  # Create an instance of the SearchEngine class
     print("Benvenuto nel motore di ricerca!\n")
-    print("Scegli il ranking da utilizzare per la ricerca:")
-    scelta=input("1: TF-IDF (basato su ts_rank, metodo di default per Postgres; \n2: BM25\nSCELTA: ")
-    if scelta == '1':
-        result = ricerca.tfidf_search()
-    elif scelta == '2':
-        ricerca.bm25_search()
-    else:
-        print("Scelta non valida. Utilizzerò il ranking TF-IDF come predefinito.")
-        ricerca.tfidf_search()
+    while True:
+        print("Scegli il ranking da utilizzare per la ricerca:")
+        scelta=input("1: TF-IDF (basato su ts_rank, metodo di default per Postgres; \n2: BM25\n3: EXIT\nSCELTA: ")
+        if scelta == '1':
+            result = ricerca.tfidf_search()
+        elif scelta == '2':
+            ricerca.bm25_search()
+        elif scelta == '3':
+            break
+        else:
+            print("Scelta non valida. Utilizzerò il ranking TF-IDF come predefinito.")
+            ricerca.tfidf_search()
 
-    for r in result:
-        print(f"\n🎬 {r[0]} ({r[1]}) - Type: {r[4]} - ⭐ Average Rating:  {r[5]}\n   {r[3]}\n   Genere: {r[2]}")
+        if result == 0:
+            continue
+
+        for r in result:
+            print(f"\n🎬 {r[0]} ({r[1]}) - Type: {r[4]} - ⭐ Average Rating:  {r[5]}\n   {r[3]}\n   Genere: {r[2]}")
 
     # Close the connection
+    print("Arrivederci!!!")
     close_connection(conn)
 
 if __name__ == '__main__':
