@@ -38,8 +38,6 @@ def close_connection(conn):
         print("Connessione chiusa con successo.")
 
 def main():
-    setup_nltk()  # Setup NLTK data files
-    time.sleep(2)
     os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
     database = DatabaseConfig()    # Create a new database configuration
     conn = db_connection(database) # Connect to the database
