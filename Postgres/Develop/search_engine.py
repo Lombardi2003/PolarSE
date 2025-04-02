@@ -51,11 +51,10 @@ class SearchEngine:
             """
         elif field == "average_rating":
             query = f"""
-            SELECT title, release_year, genres, description, type, average_rating,
-                ROUND(average_rating::numeric,1) AS rank  
+            SELECT title, release_year, genres, description, type, average_rating
             FROM dataset
-            WHERE ROUND(average_rating::numeric,1) = %s  
-            ORDER BY rank DESC
+            WHERE ROUND({field}::numeric,1) = %s  
+            ORDER BY {field} DESC
             LIMIT 10;
             """
         else:
