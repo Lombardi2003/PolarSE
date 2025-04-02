@@ -69,11 +69,9 @@ def popolate_table(conn):
                             release_year = -1
                         insert_query = """
                         INSERT INTO dataset (id, title, release_year, genres, average_rating, description, type)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+                        VALUES (%s, %s, %s, %s, %s, %s, %s);
                         """     # %s is a placeholder for the values (to prevent SQL injection). The DB driver automaticcaly converts the values to the correct SQL format.
                         cursor.execute(insert_query, (id, title, int(release_year), genres, average_rating, description, type))
-                        # Copy the description and title to the processed columns
-                        #cursor.execute("UPDATE dataset SET processed_description = description, processed_title = title WHERE id = %s;", (id,))
                         # Commit the changes to the database
                         conn.commit()
                 print("\nDati inseriti con successo.")
