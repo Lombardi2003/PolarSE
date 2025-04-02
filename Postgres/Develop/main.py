@@ -65,7 +65,7 @@ def main():
     ricerca = SearchEngine(database, conn)  # Create an instance of the SearchEngine class
     print("Benvenuto nel motore di ricerca!\n")
     print("Scegli il ranking da utilizzare per la ricerca:")
-    scelta=input("1: TF-IDF\n2: BM25\nSCELTA: ")
+    scelta=input("1: TF-IDF (basato su ts_rank, metodo di default per Postgres; \n2: BM25\nSCELTA: ")
     if scelta == '1':
         ricerca.tfidf_search()
     elif scelta == '2':
