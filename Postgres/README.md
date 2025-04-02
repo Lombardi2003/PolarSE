@@ -20,11 +20,11 @@ Qui inseriamo tutte le cose da fare, un programma da realizzare passo passo:
     - [X] Vedere quando applicare l'NLTK al motore di ricerca 📚
     - [X] Se è il momento creare il tokenizzatore 📝
 7. **Search Engines 💡**
-    - [ ] Capire il motore di ricerca di Postgres di default (ranking di default) 🤖
-    - [ ] Realizzazione del modulo di ricerca per Postgres 🧑‍💻
+    - [X] Capire il motore di ricerca di Postgres di default (ranking di default) 🤖
+    - [X] Realizzazione della classe e del modulo di ricerca per Postgres 🧑‍💻
 8. **Testing del motore di ricerca 🧪**
     - [ ] Utilizzare delle query semplici o dei test per testare ogni cosa ✅
-    - [ ] Se non eseguito prima. creare il tokenizzatore 🖋️
+    - [X] Se non eseguito prima. creare il tokenizzatore 🖋️
 9. **2° modello di ranking 🏅**
     - [ ] Implementare il secondo modello di ranking 🏆
 10. **Query 💬**

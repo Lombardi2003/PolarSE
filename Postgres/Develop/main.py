@@ -39,7 +39,7 @@ def close_connection(conn):
         print("Connessione chiusa con successo.")
 
 def main():
-    setup_nltk()  # Setup NLTK data files
+    #setup_nltk()  # Setup NLTK data files
     time.sleep(2)
     os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
     database = DatabaseConfig()    # Create a new database configuration
@@ -51,15 +51,17 @@ def main():
         create_db(database) # Avvia lo script di creazione del DB
         conn = db_connection(database)  # Riprova a connettersi dopo la creazione
         print("Database creato e connesso con successo.\n")
-    
-    # Creazione della tabella
-    create_table(conn)
-    
-    # Popolamento della tabella
-    popolate_table(conn)
 
-    # Creazione degli indici
-    create_indexes(conn)
+        # Creazione della tabella
+        create_table(conn)
+        
+        # Popolamento della tabella
+        popolate_table(conn)
+
+        # Creazione degli indici
+        create_indexes(conn)
+    
+    
 
     # Prompt per la scelta del ranking
     ricerca = SearchEngine(database, conn)  # Create an instance of the SearchEngine class
@@ -67,12 +69,15 @@ def main():
     print("Scegli il ranking da utilizzare per la ricerca:")
     scelta=input("1: TF-IDF (basato su ts_rank, metodo di default per Postgres; \n2: BM25\nSCELTA: ")
     if scelta == '1':
-        ricerca.tfidf_search()
+        result = ricerca.tfidf_search()
     elif scelta == '2':
         ricerca.bm25_search()
     else:
         print("Scelta non valida. Utilizzerò il ranking TF-IDF come predefinito.")
         ricerca.tfidf_search()
+
+    for r in result:
+        print(f"\n🎬 {r[0]} ({r[1]}) - Type: {r[4]} - ⭐ Average Rating:  {r[5]}\n   {r[3]}\n   Genere: {r[2]}")
 
     # Close the connection
     close_connection(conn)
