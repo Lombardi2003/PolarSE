@@ -38,7 +38,7 @@ def close_connection(conn):
         print("Connessione chiusa con successo.")
 
 def main():
-    #setup_nltk()  # Setup NLTK data files
+    setup_nltk()  # Setup NLTK data files
     time.sleep(2)
     os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
     database = DatabaseConfig()    # Create a new database configuration
@@ -51,14 +51,14 @@ def main():
         conn = db_connection(database)  # Riprova a connettersi dopo la creazione
         print("Database creato e connesso con successo.\n")
 
-        # Creazione della tabella
-        create_table(conn)
-        
-        # Popolamento della tabella
-        popolate_table(conn)
+    # Creazione della tabella
+    create_table(conn)
+    
+    # Popolamento della tabella
+    popolate_table(conn)
 
-        # Creazione degli indici
-        create_indexes(conn)
+    # Creazione degli indici
+    create_indexes(conn)
     
     # Prompt per la scelta del ranking
     ricerca = SearchEngine(database, conn)  # Create an instance of the SearchEngine class
