@@ -26,7 +26,7 @@ Qui inseriamo tutte le cose da fare, un programma da realizzare passo passo:
     - [X] Utilizzare delle query semplici o dei test per testare ogni cosa ✅
     - [X] Se non eseguito prima. creare il tokenizzatore 🖋️
 9. **2° modello di ranking 🏅**
-    - [ ] Implementare il secondo modello di ranking 🏆
+    - [X] Implementare il secondo modello di ranking 🏆
 10. **Query 💬**
     - [ ] Studiare se i due ranking e soprattuto il Search Engine funzioni con le query complesse 💻
 11. **Funzionalità aggiuntiva ✨**

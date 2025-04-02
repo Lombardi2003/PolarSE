@@ -26,7 +26,13 @@ class SearchEngine:
     
     # Implementazione della ricerca BM25
     def bm25_search(self):
-        pass
+        text = input("Scegli il campo su cui effettuare la ricerca ([title, description, genres, type, release_year, average_rating]:[valore]): ") 
+        field, search_value = text.split(":")
+        if field not in columns:
+            print("Campo inesistente")
+            return 0
+        results = self.execute_bm25_rank(field, search_value)
+        return results
     
     #Restituisce la stringa SQL per generare il ts_vector su un campo specifico.
     @staticmethod
@@ -40,7 +46,7 @@ class SearchEngine:
     
     #Costruisce la query SQL utilizzando ts_vector, ts_query e ts_rank.
     @staticmethod
-    def generate_query(field, search_value):
+    def generate_query(field, search_value, ranking_method='tfidf'):
         if field == "release_year":     # Query per i campi numerici (senza full-text search)
             query = f"""
             SELECT title, release_year, genres, description, type, average_rating
@@ -61,14 +67,24 @@ class SearchEngine:
             # Query per i campi testuali con full-text search
             ts_vector = SearchEngine.generate_ts_vector(field)
             ts_query = "to_tsquery('english', %s)"
-            query = f"""
-            SELECT title, release_year, genres, description, type, average_rating,
-                ts_rank({ts_vector}, {ts_query}) AS rank
-            FROM dataset
-            WHERE {ts_vector} @@ {ts_query}
-            ORDER BY rank DESC
-            LIMIT 10;
-            """
+            if ranking_method == 'bm25':
+                query = f"""
+                SELECT title, release_year, genres, description, type, average_rating,
+                    ts_rank_cd({ts_vector}, {ts_query}) AS rank
+                FROM dataset
+                WHERE {ts_vector} @@ {ts_query}
+                ORDER BY rank DESC
+                LIMIT 10;
+                """
+            else:
+                query = f"""
+                SELECT title, release_year, genres, description, type, average_rating,
+                    ts_rank({ts_vector}, {ts_query}) AS rank
+                FROM dataset
+                WHERE {ts_vector} @@ {ts_query}
+                ORDER BY rank DESC
+                LIMIT 10;
+                """
         return query
     
     # Esegue la query e restituisce i risultati ordinati per ranking.
@@ -86,4 +102,21 @@ class SearchEngine:
             cur.execute(sql_query, (ts_query_value, ts_query_value))
         results = cur.fetchall()
         cur.close()        
-        return results   
+        return results  
+
+    # Esegue la query e restituisce i risultati ordinati per ranking (TF-IDF o BM25).
+    def execute_bm25_rank(self, field, search_value):  
+        cur = self.conn.cursor()          
+        sql_query = SearchEngine.generate_query(field, search_value, ranking_method='bm25')
+        if field == "release_year":
+            search_value = int(search_value)
+            cur.execute(sql_query, (search_value,))
+        elif field == "average_rating":
+            search_value = float(search_value)
+            cur.execute(sql_query, (search_value,))
+        else:
+            ts_query_value = SearchEngine.generate_ts_query(search_value)
+            cur.execute(sql_query, (ts_query_value, ts_query_value))
+        results = cur.fetchall()
+        cur.close()        
+        return results 

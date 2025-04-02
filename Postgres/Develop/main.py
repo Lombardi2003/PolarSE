@@ -66,16 +66,16 @@ def main():
     print("Benvenuto nel motore di ricerca!\n")
     while True:
         print("Scegli il ranking da utilizzare per la ricerca:")
-        scelta=input("1: TF-IDF (basato su ts_rank, metodo di default per Postgres; \n2: BM25\n3: EXIT\nSCELTA: ")
+        scelta=input("1: TF-IDF (basato su ts_rank, metodo di default per Postgres; \n2: BM25 (basato su ts_rank_cd)\n3: EXIT\nSCELTA: ")
         if scelta == '1':
             result = ricerca.tfidf_search()
         elif scelta == '2':
-            ricerca.bm25_search()
+            result = ricerca.bm25_search()
         elif scelta == '3':
             break
         else:
-            print("Scelta non valida. Utilizzerò il ranking TF-IDF come predefinito.")
-            ricerca.tfidf_search()
+            print("Scelta non valida.")
+            continue
         if result == 0:
             continue
         for r in result:
