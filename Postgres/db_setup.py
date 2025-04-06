@@ -77,3 +77,30 @@ def popolate_table(conn):
                 print("\nDati inseriti con successo.")
         except Exception as e:
             print(f"\nErrore durante l'inserimento dei dati: la Tabella è già popolata")
+
+def table_exists(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='dataset')")
+    exists = cursor.fetchone()[0]
+    cursor.close()
+    return exists
+
+def control_popolate(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM dataset")
+    row_count = cursor.fetchone()[0]
+    cursor.close()
+    if row_count == 0:
+        return True         # Table is empty, needs to be populated
+    else:
+        return False        # Table is not empty, no need to populate
+    
+def index_exists(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM pg_indexes WHERE tablename='dataset' AND indexname IN ('idx_title', 'idx_release_year', 'idx_genres', 'idx_average_rating', 'idx_description', 'idx_type')")
+    exists = cursor.fetchone()[0]
+    cursor.close()
+    if exists == 0:
+        return True         # Indexes do not exist
+    else:
+        return False        # Indexes exist

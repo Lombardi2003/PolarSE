@@ -1,5 +1,5 @@
 from database_config import DatabaseConfig
-from db_setup import create_db, create_table, popolate_table
+from db_setup import create_db, create_table, popolate_table, table_exists, control_popolate, index_exists
 from indexing import create_indexes
 from search_engine import SearchEngine  # Import the SearchEngine class from search_engine.py
 
@@ -49,14 +49,14 @@ def main():
         conn = db_connection(database)  # Riprova a connettersi dopo la creazione
         print("Database creato e connesso con successo.\n")
 
-    # Creazione della tabella
-    create_table(conn)
+    if not table_exists(conn):
+        create_table(conn)  # Creazione della tabella
     
-    # Popolamento della tabella
-    popolate_table(conn)
+    if control_popolate(conn) is True:
+        popolate_table(conn) # Popolamento della tabella
 
-    # Creazione degli indici
-    create_indexes(conn)
+    if index_exists(conn) is True:
+        create_indexes(conn) # Creazione degli indici
     
     # Prompt per la scelta del ranking
     ricerca = SearchEngine(database, conn)  # Create an instance of the SearchEngine class
