@@ -16,8 +16,7 @@ class SearchEngine:
 
     # Implementazione della ricerca TF-IDF
     def tfidf_search(self):
-        text = input("Scegli il campo su cui effettuare la ricerca ([title, description, genres, type, release_year, average_rating]:[valore]): ") 
-        field, search_value = text.split(":")
+        field, search_value = SearchEngine.select_fields()
         if field not in columns:
             print("Campo inesistente")
             return 0
@@ -26,13 +25,22 @@ class SearchEngine:
     
     # Implementazione della ricerca BM25
     def bm25_search(self):
-        text = input("Scegli il campo su cui effettuare la ricerca ([title, description, genres, type, release_year, average_rating]:[valore]): ") 
-        field, search_value = text.split(":")
+        field, search_value = SearchEngine.select_fields()
         if field not in columns:
             print("Campo inesistente")
             return 0
         results = self.execute_bm25_rank(field, search_value)
         return results
+    
+    @staticmethod
+    def select_fields():
+        text = input("Scegli il campo su cui effettuare la ricerca ([title, description, genres, type, release_year, average_rating]:[valore]): ") 
+        if ":" not in text:
+            field = "title"  # Campo di default
+            search_value = text
+        else:
+            field, search_value = text.split(":")
+        return field, search_value
     
     #Restituisce la stringa SQL per generare il ts_vector su un campo specifico.
     @staticmethod
