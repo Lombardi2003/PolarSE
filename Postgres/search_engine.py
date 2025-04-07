@@ -49,9 +49,9 @@ class SearchEngine:
                     return self.execute_ts_rank(field, value)
         else:
             if ranking_method == 'bm25':
-                return self.execute_complex_bm25_query(field, value)
+                return self.execute_complex_query(criteria, 'bm25')
             else:
-                return self.execute_complex_ts_rank_query(criteria)
+                return self.execute_complex_query(criteria)
 
     def execute_simple_query(self, field, value):
         cur = self.conn.cursor()
@@ -65,8 +65,8 @@ class SearchEngine:
         cur.close()
         return results
 
-    def execute_complex_query(self, criteria):
-        query, values = SearchEngine.generate_complex_query(criteria)
+    def execute_complex_query(self, criteria, ranking_method='tfidf'):
+        query, values = SearchEngine.generate_complex_query(criteria, ranking_method)
         cur = self.conn.cursor()
         cur.execute(query, values)
         results = cur.fetchall()
@@ -129,7 +129,7 @@ class SearchEngine:
         return query
 
     @staticmethod
-    def generate_complex_query(criteria):
+    def generate_complex_query(criteria, ranking_method='tfidf'):
         where_clauses = []
         values = []
 
@@ -145,13 +145,27 @@ class SearchEngine:
                 values.append(f"%{value}%")
 
         where_clause = " AND ".join(where_clauses)
-        query = f"""
-        SELECT title, release_year, genres, description, type, average_rating
-        FROM dataset
-        WHERE {where_clause}
-        ORDER BY release_year DESC
-        LIMIT 10;
-        """
+        ts_vector = "to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || coalesce(type, ''))"
+        ts_query = "to_tsquery('english', %s)"
+        print(ts_query)
+        if ranking_method == 'bm25':
+            query = f"""
+            SELECT title, release_year, genres, description, type, average_rating,
+                     ts_rank_cd({ts_vector}, {ts_query}) AS rank
+            FROM dataset
+            WHERE {where_clause} AND {ts_vector} @@ {ts_query}
+            ORDER BY rank DESC
+            LIMIT 10;
+            """
+        else:
+            query = f"""
+            SELECT title, release_year, genres, description, type, average_rating,
+                     ts_rank({ts_vector}, {ts_query}) AS rank
+            FROM dataset
+            WHERE {where_clause} AND {ts_vector} @@ {ts_query}
+            ORDER BY rank DESC
+            LIMIT 10;
+            """
         return query, values
 
     def execute_ts_rank(self, field, search_value):
