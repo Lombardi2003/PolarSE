@@ -12,9 +12,11 @@ class SearchEngine:
     def parse_query_input():
         text = input("Inserisci la query ([campo:valore] oppure più campi separati da un operatore booleano): ")
         if 'AND' in text:
-            pairs = text.split(' AND ') 
+            pairs = text.split(' AND ')
+            operator = 'AND' 
         elif 'OR' in text:
             pairs = text.split(' OR ')      # Da plementare
+            operator = 'OR'
         elif 'NOT' in text:
             pairs = text.split(' NOT ')     # Da plementare
         else:
@@ -31,10 +33,10 @@ class SearchEngine:
             else:
                 # fallback: se scrive solo una parola senza campo, assume sia il titolo
                 criteria["title"] = pair
-        return criteria
+        return criteria, operator
 
     def search_auto(self, ranking_method='tfidf'):
-        criteria = SearchEngine.parse_query_input()
+        criteria, operator = SearchEngine.parse_query_input()
         if not criteria:
             print("Nessuna query valida inserita.")
             return []
@@ -49,9 +51,9 @@ class SearchEngine:
                     return self.execute_ts_rank(field, value)
         else:
             if ranking_method == 'bm25':
-                return self.execute_complex_query(criteria, 'bm25')
+                return self.execute_complex_query(operator, criteria, 'bm25')
             else:
-                return self.execute_complex_query(criteria)
+                return self.execute_complex_query(operator, criteria)
 
     def execute_simple_query(self, field, value):
         cur = self.conn.cursor()
@@ -139,8 +141,8 @@ class SearchEngine:
         cur.close()
         return results
 
-    def execute_complex_query(self, criteria, ranking_method='tfidf'):
-        query, values = SearchEngine.generate_complex_query(criteria, ranking_method)
+    def execute_complex_query(self, operator, criteria, ranking_method='tfidf'):
+        query, values = SearchEngine.generate_complex_query(operator, criteria, ranking_method)
         cur = self.conn.cursor()
         cur.execute(query, values)
         results = cur.fetchall()
@@ -148,7 +150,7 @@ class SearchEngine:
         return results
     
     @staticmethod
-    def generate_complex_query(criteria, ranking_method='tfidf'):
+    def generate_complex_query(operator, criteria, ranking_method='tfidf'):
         values = []
         ts_query = "to_tsquery('english', %s)"
         if ranking_method == 'bm25':
@@ -174,7 +176,7 @@ class SearchEngine:
                 app.append(f"""
                      {ts_vector} @@ {ts_query}
                 """)
-            query += " AND ".join(app)
+            query += f" {operator} ".join(app)
             query +=f"""
             ORDER BY rank DESC
             LIMIT 10;
@@ -202,7 +204,7 @@ class SearchEngine:
                 app.append(f"""
                      {ts_vector} @@ {ts_query}
                 """)
-            query += " AND ".join(app)
+            query += f" {operator} ".join(app)
             query +=f"""
             ORDER BY rank DESC
             LIMIT 10;
@@ -210,3 +212,4 @@ class SearchEngine:
         print(query)
         print(f"Valori: {values}")
         return query, values
+    
