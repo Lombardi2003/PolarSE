@@ -10,6 +10,7 @@ class SearchEngine:
 
     @staticmethod
     def parse_query_input():
+        operator = None
         text = input("Inserisci la query ([campo:valore] oppure più campi separati da un operatore booleano): ")
         if 'AND' in text:
             pairs = text.split(' AND ')
