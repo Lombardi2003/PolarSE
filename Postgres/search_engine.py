@@ -149,38 +149,61 @@ class SearchEngine:
     
     @staticmethod
     def generate_complex_query(criteria, ranking_method='tfidf'):
-        where_clauses = []
         values = []
-
-        for field, value in criteria.items():
-            if field == "release_year":
-                where_clauses.append(f"{field} = %s")
-                values.append(int(value))
-            elif field == "average_rating":
-                where_clauses.append(f"ROUND({field}::numeric,1) = %s")
-                values.append(float(value))
-            else:
-                where_clauses.append(f"{field} ILIKE %s")
-                values.append(f"%{value}%")
-
-        where_clause = " AND ".join(where_clauses)
-        ts_vector = "to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || coalesce(type, ''))"
-        ts_query = "to_tsquery('english', %s, %s)"
+        ts_query = "to_tsquery('english', %s)"
         if ranking_method == 'bm25':
+            app = list()
             query = f"""
-            SELECT title, release_year, genres, description, type, average_rating,
-                     ts_rank_cd({ts_vector}, {ts_query}) AS rank
+            SELECT title, release_year, genres, description, type, average_rating,"""
+
+            ts_vector = ""
+            for field, value in criteria.items():
+                ts_vector = SearchEngine.generate_ts_vector(field)
+                values.append(value)
+                app.append(f"""
+                     ts_rank_cd({ts_vector}, {ts_query})
+                """)
+            query += " + ".join(app)
+            app = list()
+            query +=""" AS rank
             FROM dataset
-            WHERE ({where_clause}) AND {ts_vector} @@ {ts_query}
+            WHERE """
+            for field, value in criteria.items():
+                ts_vector = SearchEngine.generate_ts_vector(field)
+                values.append(value)
+                app.append(f"""
+                     {ts_vector} @@ {ts_query}
+                """)
+            query += " AND ".join(app)
+            query +=f"""
             ORDER BY rank DESC
             LIMIT 10;
             """
         else:
+            app = list()
             query = f"""
-            SELECT title, release_year, genres, description, type, average_rating,
-                     ts_rank({ts_vector}, {ts_query}) AS rank
+            SELECT title, release_year, genres, description, type, average_rating,"""
+
+            ts_vector = ""
+            for field, value in criteria.items():
+                ts_vector = SearchEngine.generate_ts_vector(field)
+                values.append(value)
+                app.append(f"""
+                     ts_rank({ts_vector}, {ts_query})
+                """)
+            query += " + ".join(app)
+            app = list()
+            query +=""" AS rank
             FROM dataset
-            WHERE {where_clause} AND {ts_vector} @@ {ts_query}
+            WHERE """
+            for field, value in criteria.items():
+                ts_vector = SearchEngine.generate_ts_vector(field)
+                values.append(value)
+                app.append(f"""
+                     {ts_vector} @@ {ts_query}
+                """)
+            query += " AND ".join(app)
+            query +=f"""
             ORDER BY rank DESC
             LIMIT 10;
             """
