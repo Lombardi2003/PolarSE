@@ -88,7 +88,7 @@ class SearchEngine:
             """
         else:
             ts_vector = SearchEngine.generate_ts_vector(field)
-            ts_query = "to_tsquery('english', %s)"
+            ts_query = "plainto_tsquery('english', %s)"  # Cambia to_tsquery con plainto_tsquery
             if ranking_method == 'bm25':
                 query = f"""
                 SELECT title, release_year, genres, description, type, average_rating,
@@ -122,13 +122,16 @@ class SearchEngine:
 
     @staticmethod
     def generate_ts_query(search_value):
-        return search_value.replace(" ", " & ")
+        # Mantieni la funzione come prima, convertendo gli spazi in ' & ' per to_tsquery, ma usa plainto_tsquery.
+        search_value = search_value.replace(" ", " & ")
+        return search_value
 
     def execute_ts_rank(self, field, search_value):
         cur = self.conn.cursor()
         sql_query = SearchEngine.generate_query(field, search_value)
-        ts_query_value = SearchEngine.generate_ts_query(search_value)
-        cur.execute(sql_query, (ts_query_value, ts_query_value))
+        ts_query_value = SearchEngine.generate_ts_query(search_value)  # Restiamo con la stessa logica per convertire la query
+        # Usiamo plainto_tsquery invece di to_tsquery per semplificare la sintassi
+        cur.execute(sql_query, (ts_query_value, ts_query_value))  
         results = cur.fetchall()
         cur.close()
         return results
@@ -137,7 +140,8 @@ class SearchEngine:
         cur = self.conn.cursor()
         sql_query = SearchEngine.generate_query(field, search_value, ranking_method='bm25')
         ts_query_value = SearchEngine.generate_ts_query(search_value)
-        cur.execute(sql_query, (ts_query_value, ts_query_value))
+        # Usiamo plainto_tsquery invece di to_tsquery per semplificare la sintassi
+        cur.execute(sql_query, (ts_query_value, ts_query_value))  
         results = cur.fetchall()
         cur.close()
         return results
@@ -153,7 +157,7 @@ class SearchEngine:
     @staticmethod
     def generate_complex_query(operator, criteria, ranking_method='tfidf'):
         values = []
-        ts_query = "to_tsquery('english', %s)"
+        ts_query = "plainto_tsquery('english', %s)"  # Cambiato to_tsquery con plainto_tsquery
         if ranking_method == 'bm25':
             app = list()
             query = f"""
@@ -213,4 +217,3 @@ class SearchEngine:
         print(query)
         print(f"Valori: {values}")
         return query, values
-    
