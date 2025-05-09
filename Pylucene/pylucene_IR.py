@@ -105,9 +105,9 @@ class PyLuceneIR:
                 doc.add(TextField("description", description, Field.Store.YES))
                 doc.add(TextField("processed_description", preprocess_text(description), Field.Store.NO))
                 
-                type_val = data.get("type", "UNKNOWN")
+                type_val = data.get("type", "UNKNOWN").lower()
                 doc.add(StoredField("type", type_val))
-                doc.add(TextField("type_txt", type_val, Field.Store.NO))
+                doc.add(StringField("type_txt", type_val, Field.Store.NO))
                 
                 genres = data.get("genres", [])
                 genres_str = ", ".join(genres) if isinstance(genres, list) else str(genres)
@@ -205,6 +205,19 @@ class PyLuceneIR:
             # Token del tipo campo:valore
             if ":" in token:
                 field, value = token.split(":", 1)
+
+                # Gestione type
+                if field.lower() == "type":
+                    value = value.lower()
+                    if value not in ["movie", "tv"]:
+                        print(f"Tipo non valido: {value}. Usa 'movie' o 'tv'")
+                        continue
+                    subquery = TermQuery(Term("type_txt", value))
+                    # Aggiungo subito e passo al token successivo
+                    occur = BooleanClause.Occur.SHOULD if (force_should and current_operator != BooleanClause.Occur.MUST_NOT) else current_operator
+                    builder.add(subquery, occur)
+                    continue
+
                 # Mappatura speciale per genres
                 if field.lower() == "genres":
                     field = "genres_txt"
@@ -276,12 +289,13 @@ class PyLuceneIR:
                     combined_builder.add(TermQuery(Term("description", token.lower())), BooleanClause.Occur.SHOULD)
                     subquery = combined_builder.build()
 
-            # Aggiungo la subquery al builder principale
+            # Aggiungo la subquery al builder principale solo se non gestita sopra
             if subquery is not None:
                 occur = BooleanClause.Occur.SHOULD if (force_should and current_operator != BooleanClause.Occur.MUST_NOT) else current_operator
                 builder.add(subquery, occur)
 
         return builder.build()
+
 
     @staticmethod
     def search_index(query_str, max_results=10, ranking_method="1"):
@@ -329,7 +343,7 @@ if __name__ == "__main__":
         
         if ranking in ('1', '2'):
             break
-        print("\n\033[91mLa tua scelta non sembra essere corretta. Per favore, digita solamente '1' oppure '2'\033[0m\n")
+        print("\n\033[91mOPS! LA TUA SCELTA NON SEMBRA CORRETTA. DIGITA SOLAMENTE '1' O '2'.\033[0m\n")
     
     results = PyLuceneIR.search_index(corrected_query, ranking_method=ranking)
     
