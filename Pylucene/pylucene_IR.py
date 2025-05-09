@@ -23,6 +23,9 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 import shlex
 
+# TQDM per mostrare la progress bar
+from tqdm import tqdm
+
 nltk.data.path = ['/root/nltk_data']
 stop_words = set(stopwords.words('english'))
 stemmer = PorterStemmer()
@@ -59,11 +62,9 @@ class PyLuceneIR:
 
     @staticmethod
     def create_index():
-
         PyLuceneIR.init_lucene()
         PyLuceneIR.prepare_index_dir()
 
-        # Creazione indice principale
         main_index_dir = FSDirectory.open(Paths.get(PyLuceneIR.MAIN_INDEX))
         main_analyzer = StandardAnalyzer()
         main_config = IndexWriterConfig(main_analyzer)
@@ -74,16 +75,29 @@ class PyLuceneIR:
             print("Nessun file JSON trovato nel dataset")
             return
 
-        for file in json_files:
+        # Inizializzazione progress bar
+        progress_bar = tqdm(
+            json_files,
+            desc="Creazione indici",
+            bar_format="{l_bar}{bar:40}| {n_fmt}/{total_fmt} | {postfix[0]}",
+            postfix=["Inizio..."],
+            dynamic_ncols=True,
+            unit="film"
+        )
+
+        for file in progress_bar:
             with open(file, 'r', encoding='utf-8') as f:
                 try:
                     data = json.load(f)
                 except Exception as e:
-                    print(f"Errore nel file {file}: {e}")
+                    print(f"\n Errore nel file {file}: {e}")
+                    progress_bar.set_postfix_str("Errore in ultimo file!")
                     continue
 
                 doc = Document()
-                title = data.get("title", "")
+                title = data.get("title", "Senza titolo")
+                
+                # Costruzione documento
                 doc.add(TextField("title", title, Field.Store.YES))
                 doc.add(TextField("processed_title", preprocess_text(title), Field.Store.NO))
                 
@@ -91,7 +105,6 @@ class PyLuceneIR:
                 doc.add(TextField("description", description, Field.Store.YES))
                 doc.add(TextField("processed_description", preprocess_text(description), Field.Store.NO))
                 
-                # Usa il campo "type" presente nel JSON
                 type_val = data.get("type", "UNKNOWN")
                 doc.add(StoredField("type", type_val))
                 doc.add(TextField("type_txt", type_val, Field.Store.NO))
@@ -99,7 +112,6 @@ class PyLuceneIR:
                 genres = data.get("genres", [])
                 genres_str = ", ".join(genres) if isinstance(genres, list) else str(genres)
                 doc.add(StoredField("genres", genres_str))
-                # Campo indicizzato per la ricerca sui generi
                 doc.add(TextField("genres_txt", genres_str, Field.Store.NO))
 
                 if release_year := data.get("release_year"):
@@ -121,7 +133,9 @@ class PyLuceneIR:
                         print(f"Valore non valido per average_rating in {file}: {average_rating}")
 
                 main_writer.addDocument(doc)
+                progress_bar.set_postfix_str(f"Ultimo: {title[:15] + '...' if len(title) > 15 else title}")
 
+        progress_bar.close()
         main_writer.commit()
         main_writer.close()
 
@@ -131,13 +145,12 @@ class PyLuceneIR:
         spell_checker = SpellChecker(spell_dir)
         
         reader = DirectoryReader.open(main_index_dir)
-        # Uso il campo indicizzato "genres_txt" per il dizionario dello spellchecker
         spell_checker.indexDictionary(LuceneDictionary(reader, "genres_txt"), spell_config, True)
         
         reader.close()
         spell_checker.close()
         
-        print("Indici creati con successo")
+        print("\n Indicizzazione completata con successo!")
         
     
     @staticmethod
@@ -177,6 +190,7 @@ class PyLuceneIR:
         current_operator = BooleanClause.Occur.MUST
 
         for token in tokens:
+            # Riconosco operatori booleani esplicitamente
             if token.upper() in ("AND", "OR", "NOT"):
                 if token.upper() == "AND":
                     current_operator = BooleanClause.Occur.MUST
@@ -188,11 +202,14 @@ class PyLuceneIR:
 
             subquery = None
 
+            # Token del tipo campo:valore
             if ":" in token:
                 field, value = token.split(":", 1)
-                # Se il campo è "genres", mappalo su "genres_txt"
+                # Mappatura speciale per genres
                 if field.lower() == "genres":
                     field = "genres_txt"
+
+                # Gestione range numerico
                 if any(value.startswith(op) for op in (">=", ">", "<=", "<")):
                     op = value[:2] if value[:2] in (">=", "<=") else value[0]
                     num_val = value[2:] if op in (">=", "<=") else value[1:]
@@ -209,6 +226,7 @@ class PyLuceneIR:
                     except ValueError:
                         pass
                 else:
+                    # Term o frase in campo specifico
                     if value.startswith('"') and value.endswith('"'):
                         terms = value.strip('"').split()
                         term_builder = BooleanQuery.Builder()
@@ -217,35 +235,52 @@ class PyLuceneIR:
                         subquery = term_builder.build()
                     else:
                         subquery = TermQuery(Term(field, value.lower()))
+
             else:
+                # Token generico: singolo termine o frase
                 if token.startswith('"') and token.endswith('"'):
                     terms = token.strip('"').split()
                     combined_builder = BooleanQuery.Builder()
+
+                    # processed_title
                     title_builder = BooleanQuery.Builder()
                     for term in terms:
                         title_builder.add(TermQuery(Term("processed_title", term.lower())), BooleanClause.Occur.MUST)
+                    combined_builder.add(title_builder.build(), BooleanClause.Occur.SHOULD)
+
+                    # processed_description
                     desc_builder = BooleanQuery.Builder()
                     for term in terms:
                         desc_builder.add(TermQuery(Term("processed_description", term.lower())), BooleanClause.Occur.MUST)
-                    combined_builder.add(title_builder.build(), BooleanClause.Occur.SHOULD)
                     combined_builder.add(desc_builder.build(), BooleanClause.Occur.SHOULD)
+
+                    # title NON processato
+                    title_raw = BooleanQuery.Builder()
+                    for term in terms:
+                        title_raw.add(TermQuery(Term("title", term.lower())), BooleanClause.Occur.MUST)
+                    combined_builder.add(title_raw.build(), BooleanClause.Occur.SHOULD)
+
+                    # description NON processata
+                    desc_raw = BooleanQuery.Builder()
+                    for term in terms:
+                        desc_raw.add(TermQuery(Term("description", term.lower())), BooleanClause.Occur.MUST)
+                    combined_builder.add(desc_raw.build(), BooleanClause.Occur.SHOULD)
+
                     subquery = combined_builder.build()
                 else:
-                    # Cerca in entrambi i campi processed_title e processed_description
-                    title_query = TermQuery(Term("processed_title", token.lower()))
-                    desc_query = TermQuery(Term("processed_description", token.lower()))
+                    # Singolo termine non in virgolette
                     combined_builder = BooleanQuery.Builder()
-                    combined_builder.add(title_query, BooleanClause.Occur.SHOULD)
-                    combined_builder.add(desc_query, BooleanClause.Occur.SHOULD)
+                    combined_builder.add(TermQuery(Term("processed_title", token.lower())), BooleanClause.Occur.SHOULD)
+                    combined_builder.add(TermQuery(Term("processed_description", token.lower())), BooleanClause.Occur.SHOULD)
+                    combined_builder.add(TermQuery(Term("title", token.lower())), BooleanClause.Occur.SHOULD)
+                    combined_builder.add(TermQuery(Term("description", token.lower())), BooleanClause.Occur.SHOULD)
                     subquery = combined_builder.build()
 
+            # Aggiungo la subquery al builder principale
             if subquery is not None:
-                # Se force_should è vero e l'operatore corrente non è NOT, forza l'uso di SHOULD
-                if force_should and current_operator != BooleanClause.Occur.MUST_NOT:
-                    builder.add(subquery, BooleanClause.Occur.SHOULD)
-                else:
-                    builder.add(subquery, current_operator)
-            # Mantengo l'operatore corrente
+                occur = BooleanClause.Occur.SHOULD if (force_should and current_operator != BooleanClause.Occur.MUST_NOT) else current_operator
+                builder.add(subquery, occur)
+
         return builder.build()
 
     @staticmethod
@@ -280,13 +315,21 @@ class PyLuceneIR:
         return results
 
 if __name__ == "__main__":
-    PyLuceneIR.create_index()
+    os.system('clear' if os.name == 'posix' else 'cls')
+
+    #PyLuceneIR.create_index()
     
     original_query = input("\nINSERISCI LA QUERY DI RICERCA: ")
     corrected_query = PyLuceneIR.check_spelling(original_query)
     
-    print("\nSCEGLI IL METODO DI RANKING DEI RISULTATI:")
-    ranking = input("1 BM25, predefinito di PyLucene\n2 TF-IDF, per confronto con PostgreSQL (1/2): ")
+    # Nuova gestione input ranking
+    while True:
+        print("\nSCEGLI IL METODO DI RANKING DEI RISULTATI:")
+        ranking = input("1 BM25, predefinito di PyLucene\n2 TF-IDF, per confronto con PostgreSQL (1/2): ")
+        
+        if ranking in ('1', '2'):
+            break
+        print("\n\033[91mLa tua scelta non sembra essere corretta. Per favore, digita solamente '1' oppure '2'\033[0m\n")
     
     results = PyLuceneIR.search_index(corrected_query, ranking_method=ranking)
     
