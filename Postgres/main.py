@@ -76,7 +76,7 @@ def main():
         if result == 0:
             continue
         for r in result:
-            print(f"\n🎬 {r[0]} ({r[1]}) - Type: {r[4]} - ⭐ Average Rating:  {r[5]}\n   {r[3]}")
+            print(f"\n🎬 {r[0]} ({r[1] if r[1]!=-1 else "Year not available"}) - Type: {r[4]} - ⭐ Average Rating:  {r[5]}\n   {r[3]}")
             if r[2] == "":
                 print("   Genere: N/A")
             else:
