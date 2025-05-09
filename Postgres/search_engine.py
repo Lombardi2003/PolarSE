@@ -16,24 +16,31 @@ class SearchEngine:
             pairs = text.split(' AND ')
             operator = 'AND' 
         elif 'OR' in text:
-            pairs = text.split(' OR ')      # Da plementare
+            pairs = text.split(' OR ')
             operator = 'OR'
-        elif 'NOT' in text:
-            pairs = text.split(' NOT ')     # Da plementare
         else:
-            pairs = text.strip().split()
+            pairs = list()
+            pairs.append(text.strip())
+            #pairs = text.strip().split()
         criteria = {}
         print(f"Query inserita e processata: {pairs}")
         for pair in pairs:
             if ':' in pair:
-                key, value = pair.split(':', 1) # questa riga fa in modo che se ci sono più ":" prenda solo il primo
-                if key in columns:
+                key, value = pair.split(':') # questa riga fa in modo che se ci sono più ":" prenda solo il primo
+                print(f"Campo: {key}, Valore: {value}")
+                if key in columns or "NOT" in key:
+                    if "NOT" in key:
+                        operator += ' NOT'
+                    key = key.replace("NOT", "").strip()
                     criteria[key] = value
                 else:
                     print(f"Campo non valido: {key}")
             else:
                 # fallback: se scrive solo una parola senza campo, assume sia il titolo
                 criteria["title"] = pair
+                criteria["description"] = pair
+                operator = 'OR'
+
         return criteria, operator
 
     def search_auto(self, ranking_method='tfidf'):
