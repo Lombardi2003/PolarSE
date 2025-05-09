@@ -65,28 +65,6 @@ class SearchEngine:
         cur.close()
         return results
 
-    def execute_complex_query(self, criteria, ranking_method='tfidf'):
-        query, values = SearchEngine.generate_complex_query(criteria, ranking_method)
-        cur = self.conn.cursor()
-        cur.execute(query, values)
-        results = cur.fetchall()
-        cur.close()
-        return results
-
-    def tfidf_search(self):
-        return self.search_auto(ranking_method='tfidf')
-
-    def bm25_search(self):
-        return self.search_auto(ranking_method='bm25')
-
-    @staticmethod
-    def generate_ts_vector(field):
-        return f"to_tsvector('english', {field})"
-
-    @staticmethod
-    def generate_ts_query(search_value):
-        return search_value.replace(" ", " & ")
-
     @staticmethod
     def generate_query(field, search_value, ranking_method='tfidf'):
         if field == "release_year":
@@ -126,47 +104,22 @@ class SearchEngine:
                 ORDER BY rank DESC
                 LIMIT 10;
                 """
+        print(query)
         return query
 
+    def tfidf_search(self):
+        return self.search_auto(ranking_method='tfidf')
+
+    def bm25_search(self):
+        return self.search_auto(ranking_method='bm25')
+
     @staticmethod
-    def generate_complex_query(criteria, ranking_method='tfidf'):
-        where_clauses = []
-        values = []
+    def generate_ts_vector(field):
+        return f"to_tsvector('english', {field})"
 
-        for field, value in criteria.items():
-            if field == "release_year":
-                where_clauses.append(f"{field} = %s")
-                values.append(int(value))
-            elif field == "average_rating":
-                where_clauses.append(f"ROUND({field}::numeric,1) = %s")
-                values.append(float(value))
-            else:
-                where_clauses.append(f"{field} ILIKE %s")
-                values.append(f"%{value}%")
-
-        where_clause = " AND ".join(where_clauses)
-        ts_vector = "to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || coalesce(type, ''))"
-        ts_query = "to_tsquery('english', %s)"
-        print(ts_query)
-        if ranking_method == 'bm25':
-            query = f"""
-            SELECT title, release_year, genres, description, type, average_rating,
-                     ts_rank_cd({ts_vector}, {ts_query}) AS rank
-            FROM dataset
-            WHERE {where_clause} AND {ts_vector} @@ {ts_query}
-            ORDER BY rank DESC
-            LIMIT 10;
-            """
-        else:
-            query = f"""
-            SELECT title, release_year, genres, description, type, average_rating,
-                     ts_rank({ts_vector}, {ts_query}) AS rank
-            FROM dataset
-            WHERE {where_clause} AND {ts_vector} @@ {ts_query}
-            ORDER BY rank DESC
-            LIMIT 10;
-            """
-        return query, values
+    @staticmethod
+    def generate_ts_query(search_value):
+        return search_value.replace(" ", " & ")
 
     def execute_ts_rank(self, field, search_value):
         cur = self.conn.cursor()
@@ -185,3 +138,52 @@ class SearchEngine:
         results = cur.fetchall()
         cur.close()
         return results
+
+    def execute_complex_query(self, criteria, ranking_method='tfidf'):
+        query, values = SearchEngine.generate_complex_query(criteria, ranking_method)
+        cur = self.conn.cursor()
+        cur.execute(query, values)
+        results = cur.fetchall()
+        cur.close()
+        return results
+    
+    @staticmethod
+    def generate_complex_query(criteria, ranking_method='tfidf'):
+        where_clauses = []
+        values = []
+
+        for field, value in criteria.items():
+            if field == "release_year":
+                where_clauses.append(f"{field} = %s")
+                values.append(int(value))
+            elif field == "average_rating":
+                where_clauses.append(f"ROUND({field}::numeric,1) = %s")
+                values.append(float(value))
+            else:
+                where_clauses.append(f"{field} ILIKE %s")
+                values.append(f"%{value}%")
+
+        where_clause = " AND ".join(where_clauses)
+        ts_vector = "to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || coalesce(type, ''))"
+        ts_query = "to_tsquery('english', %s, %s)"
+        if ranking_method == 'bm25':
+            query = f"""
+            SELECT title, release_year, genres, description, type, average_rating,
+                     ts_rank_cd({ts_vector}, {ts_query}) AS rank
+            FROM dataset
+            WHERE ({where_clause}) AND {ts_vector} @@ {ts_query}
+            ORDER BY rank DESC
+            LIMIT 10;
+            """
+        else:
+            query = f"""
+            SELECT title, release_year, genres, description, type, average_rating,
+                     ts_rank({ts_vector}, {ts_query}) AS rank
+            FROM dataset
+            WHERE {where_clause} AND {ts_vector} @@ {ts_query}
+            ORDER BY rank DESC
+            LIMIT 10;
+            """
+        print(query)
+        print(f"Valori: {values}")
+        return query, values
