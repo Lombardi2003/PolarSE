@@ -12,35 +12,45 @@ class SearchEngine:
     def parse_query_input():
         operator = None
         text = input("Inserisci la query ([campo:valore] oppure più campi separati da un operatore booleano): ")
-        if 'AND' in text:
-            pairs = text.split(' AND ')
-            operator = 'AND' 
-        elif 'OR' in text:
-            pairs = text.split(' OR ')
-            operator = 'OR'
+        if 'AND' in text or 'OR' in text:
+            pairs, operator = SearchEngine.get_pairs(text)
         else:
             pairs = list()
             pairs.append(text.strip())
             #pairs = text.strip().split()
-        criteria = {}
+        criteria = []
         print(f"Query inserita e processata: {pairs}")
         for pair in pairs:
             if ':' in pair:
                 key, value = pair.split(':') # questa riga fa in modo che se ci sono più ":" prenda solo il primo
                 print(f"Campo: {key}, Valore: {value}")
-                if key in columns or "NOT" in key:
-                    if "NOT" in key:
-                        operator += ' NOT'
-                    key = key.replace("NOT", "").strip()
-                    criteria[key] = value
+                if key in columns:
+                    criteria.append((key, value, ":"))
                 else:
-                    print(f"Campo non valido: {key}")
+                    print(f"Campo non valido: {key}, reinserire la query.")
+                    return [], []
+            elif '<' in pair:
+                key, value = pair.split('<') # questa riga fa in modo che se ci sono più ":" prenda solo il primo
+                print(f"Campo: {key}, Valore: {value}")
+                if key == "release_year" or key == "average_rating":
+                    criteria.append((key, value, "<"))
+                else:
+                    print(f"Query non valida: {key}, reinserire la query.")
+                    return [], []
+            elif '>' in pair:
+                key, value = pair.split('>') # questa riga fa in modo che se ci sono più ":" prenda solo il primo
+                print(f"Campo: {key}, Valore: {value}")
+                if key == "release_year" or key == "average_rating":
+                    criteria.append((key, value, ">"))
+                else:
+                    print(f"Query non valida: {key}, reinserire la query.")
+                    return [], []
             else:
                 # fallback: se scrive solo una parola senza campo, assume sia il titolo
-                criteria["title"] = pair
-                criteria["description"] = pair
-                operator = 'OR'
-
+                criteria.append(("title", pair))
+                criteria.append(("description", pair))
+                operator = list()
+                operator.append("OR")
         return criteria, operator
 
     def search_auto(self, ranking_method='tfidf'):
@@ -49,7 +59,7 @@ class SearchEngine:
             print("Nessuna query valida inserita.")
             return []
         if len(criteria) == 1:
-            field, value = next(iter(criteria.items())) # Prende il primo elemento del dizionario
+            field, value = criteria.pop() # Prende il primo elemento del dizionario
             if field in ["release_year", "average_rating"]:
                 return self.execute_simple_query(field, value)
             else:
@@ -171,24 +181,40 @@ class SearchEngine:
             SELECT title, release_year, genres, description, type, average_rating,"""
 
             ts_vector = ""
-            for field, value in criteria.items():
-                ts_vector = SearchEngine.generate_ts_vector(field)
-                values.append(value)
-                app.append(f"""
-                     ts_rank_cd({ts_vector}, {ts_query})
-                """)
+            for field, value, o in criteria:
+                if field == "release_year":
+                    continue
+                else:
+                    ts_vector = SearchEngine.generate_ts_vector(field)
+                    values.append(value)
+                    app.append(f"""
+                        ts_rank_cd({ts_vector}, {ts_query})
+                    """)
             query += " + ".join(app)
             app = list()
             query +=""" AS rank
             FROM dataset
-            WHERE """
-            for field, value in criteria.items():
-                ts_vector = SearchEngine.generate_ts_vector(field)
-                values.append(value)
-                app.append(f"""
-                     {ts_vector} @@ {ts_query}
-                """)
-            query += f" {operator} ".join(app)
+            WHERE """  
+            for field, value, o in criteria:
+                if field == "release_year":
+                    app.append(f"""
+                        {field} = %s
+                    """)
+                    values.append(value)
+                else:
+                    ts_vector = SearchEngine.generate_ts_vector(field)
+                    values.append(value)
+                    app.append(f"""
+                        {ts_vector} @@ {ts_query}
+                    """) 
+            s = ""
+            i = 0
+            for a in app:
+                s += a
+                if i < len(operator):
+                    s += f" {operator[i]} "
+                i += 1
+            query += f" {s}"
             query +=f"""
             ORDER BY rank DESC
             LIMIT 10;
@@ -197,26 +223,48 @@ class SearchEngine:
             app = list()
             query = f"""
             SELECT title, release_year, genres, description, type, average_rating,"""
-
             ts_vector = ""
-            for field, value in criteria.items():
-                ts_vector = SearchEngine.generate_ts_vector(field)
-                values.append(value)
-                app.append(f"""
-                     ts_rank({ts_vector}, {ts_query})
-                """)
+            for field, value, o in criteria:
+                if field == "release_year":
+                    continue
+                if field == "average_rating":
+                    continue
+                else:
+                    ts_vector = SearchEngine.generate_ts_vector(field)
+                    values.append(value)
+                    app.append(f"""
+                        ts_rank({ts_vector}, {ts_query})
+                    """)
             query += " + ".join(app)
             app = list()
             query +=""" AS rank
             FROM dataset
             WHERE """
-            for field, value in criteria.items():
-                ts_vector = SearchEngine.generate_ts_vector(field)
-                values.append(value)
-                app.append(f"""
-                     {ts_vector} @@ {ts_query}
-                """)
-            query += f" {operator} ".join(app)
+            for field, value, o in criteria:
+                if field == "release_year":
+                    app.append(f"""
+                        {field} = %s
+                    """)
+                    values.append(value)
+                elif field == "average_rating":
+                    app.append(f"""
+                    ROUND({field}::numeric,1) = %s
+                    """)
+                    values.append(value)
+                else:
+                    ts_vector = SearchEngine.generate_ts_vector(field)
+                    values.append(value)
+                    app.append(f"""
+                        {ts_vector} @@ {ts_query}
+                    """)
+            s = ""
+            i = 0
+            for a in app:
+                s += a
+                if i < len(operator):
+                    s += f" {operator[i]} "
+                i += 1
+            query += f" {s}"
             query +=f"""
             ORDER BY rank DESC
             LIMIT 10;
@@ -224,3 +272,28 @@ class SearchEngine:
         print(query)
         print(f"Valori: {values}")
         return query, values
+
+    @staticmethod
+    def get_pairs(word):
+        pairs = word.split(" ")
+        opp = list()
+        for i in range(len(pairs)):
+            if "AND" in pairs[i] or "OR" in pairs[i]:
+                if "NOT" in pairs[i+1]:
+                    opp.append(pairs[i]+" " + pairs[i+1])
+                else:
+                    opp.append(pairs[i])
+
+        pairs = list()
+        app = word.split(" AND ")
+        for a in app:
+            if "OR" in a:
+                app2 = a.split(" OR ")
+                for b in app2:
+                    pairs.append(b)
+            elif "NOT" in a:
+                pairs.append(a[4:])
+            else:
+                pairs.append(a)
+
+        return pairs, opp
