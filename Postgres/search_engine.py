@@ -25,7 +25,7 @@ class SearchEngine:
                 key, value = pair.split(':') # questa riga fa in modo che se ci sono più ":" prenda solo il primo
                 print(f"Campo: {key}, Valore: {value}")
                 if key in columns:
-                    criteria.append((key, value, ":"))
+                    criteria.append((key, value, "="))
                 else:
                     print(f"Campo non valido: {key}, reinserire la query.")
                     return [], []
@@ -47,8 +47,8 @@ class SearchEngine:
                     return [], []
             else:
                 # fallback: se scrive solo una parola senza campo, assume sia il titolo
-                criteria.append(("title", pair))
-                criteria.append(("description", pair))
+                criteria.append(("title", pair, "="))
+                criteria.append(("description", pair, "="))
                 operator = list()
                 operator.append("OR")
         return criteria, operator
@@ -59,23 +59,23 @@ class SearchEngine:
             print("Nessuna query valida inserita.")
             return []
         if len(criteria) == 1:
-            field, value = criteria.pop() # Prende il primo elemento del dizionario
+            field, value, o = criteria.pop() # Prende il primo elemento del dizionario
             if field in ["release_year", "average_rating"]:
-                return self.execute_simple_query(field, value)
+                return self.execute_simple_query(field, value, o)
             else:
                 if ranking_method == 'bm25':
-                    return self.execute_bm25_rank(field, value)
+                    return self.execute_bm25_rank(field, value, o)
                 else:
-                    return self.execute_ts_rank(field, value)
+                    return self.execute_ts_rank(field, value, o)
         else:
             if ranking_method == 'bm25':
                 return self.execute_complex_query(operator, criteria, 'bm25')
             else:
                 return self.execute_complex_query(operator, criteria)
 
-    def execute_simple_query(self, field, value):
+    def execute_simple_query(self, field, value, operation):
         cur = self.conn.cursor()
-        sql_query = SearchEngine.generate_query(field, value)
+        sql_query = SearchEngine.generate_query(field, value, operation)
         if field == "release_year":
             value = int(value)
         elif field == "average_rating":
@@ -86,12 +86,12 @@ class SearchEngine:
         return results
 
     @staticmethod
-    def generate_query(field, search_value, ranking_method='tfidf'):
+    def generate_query(field, search_value, operation, ranking_method='tfidf'):
         if field == "release_year":
             query = f"""
             SELECT title, release_year, genres, description, type, average_rating
             FROM dataset
-            WHERE {field} = %s
+            WHERE {field} {operation} %s
             ORDER BY {field} DESC
             LIMIT 10;
             """
@@ -99,7 +99,7 @@ class SearchEngine:
             query = f"""
             SELECT title, release_year, genres, description, type, average_rating
             FROM dataset
-            WHERE ROUND({field}::numeric,1) = %s
+            WHERE ROUND({field}::numeric,1) {operation} %s
             ORDER BY {field} DESC
             LIMIT 10;
             """
@@ -143,9 +143,9 @@ class SearchEngine:
         search_value = search_value.replace(" ", " & ")
         return search_value
 
-    def execute_ts_rank(self, field, search_value):
+    def execute_ts_rank(self, field, search_value, operation):
         cur = self.conn.cursor()
-        sql_query = SearchEngine.generate_query(field, search_value)
+        sql_query = SearchEngine.generate_query(field, search_value, operation)
         ts_query_value = SearchEngine.generate_ts_query(search_value)  # Restiamo con la stessa logica per convertire la query
         # Usiamo plainto_tsquery invece di to_tsquery per semplificare la sintassi
         cur.execute(sql_query, (ts_query_value, ts_query_value))  
@@ -153,9 +153,9 @@ class SearchEngine:
         cur.close()
         return results
 
-    def execute_bm25_rank(self, field, search_value):
+    def execute_bm25_rank(self, field, search_value, operation):
         cur = self.conn.cursor()
-        sql_query = SearchEngine.generate_query(field, search_value, ranking_method='bm25')
+        sql_query = SearchEngine.generate_query(field, search_value, operation, ranking_method='bm25')
         ts_query_value = SearchEngine.generate_ts_query(search_value)
         # Usiamo plainto_tsquery invece di to_tsquery per semplificare la sintassi
         cur.execute(sql_query, (ts_query_value, ts_query_value))  
@@ -198,7 +198,12 @@ class SearchEngine:
             for field, value, o in criteria:
                 if field == "release_year":
                     app.append(f"""
-                        {field} = %s
+                        {field} {o} %s
+                    """)
+                    values.append(value)
+                elif field == "average_rating":
+                    app.append(f"""
+                    ROUND({field}::numeric,1) {o} %s
                     """)
                     values.append(value)
                 else:
@@ -224,6 +229,7 @@ class SearchEngine:
             query = f"""
             SELECT title, release_year, genres, description, type, average_rating,"""
             ts_vector = ""
+            print(f"Criteria: {criteria}")
             for field, value, o in criteria:
                 if field == "release_year":
                     continue
@@ -243,12 +249,12 @@ class SearchEngine:
             for field, value, o in criteria:
                 if field == "release_year":
                     app.append(f"""
-                        {field} = %s
+                        {field} {o} %s
                     """)
                     values.append(value)
                 elif field == "average_rating":
                     app.append(f"""
-                    ROUND({field}::numeric,1) = %s
+                    ROUND({field}::numeric,1) {o} %s
                     """)
                     values.append(value)
                 else:
