@@ -207,10 +207,12 @@ class SearchEngine:
             app = list()
             query = f"""
             SELECT title, release_year, genres, description, type, average_rating,"""
-
             ts_vector = ""
+            print(f"Criteria: {criteria}")
             for field, value, o in criteria:
                 if field == "release_year":
+                    continue
+                if field == "average_rating":
                     continue
                 else:
                     ts_vector = SearchEngine.generate_ts_vector(field)
@@ -222,7 +224,7 @@ class SearchEngine:
             app = list()
             query +=""" AS rank
             FROM dataset
-            WHERE """  
+            WHERE """
             for field, value, o in criteria:
                 if field == "release_year":
                     if 'TO' in value:
@@ -255,7 +257,7 @@ class SearchEngine:
                     values.append(value)
                     app.append(f"""
                         {ts_vector} @@ {ts_query}
-                    """) 
+                    """)
             s = ""
             i = 0
             for a in app:
