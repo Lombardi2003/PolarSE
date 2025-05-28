@@ -21,30 +21,36 @@ class SearchEngine:
         criteria = []
         print(f"Query inserita e processata: {pairs}")
         for pair in pairs:
+            # Query con uguale
             if ':' in pair:
-                key, value = pair.split(':') # questa riga fa in modo che se ci sono più ":" prenda solo il primo
-                print(f"Campo: {key}, Valore: {value}")
-                if key in columns:
-                    criteria.append((key, value, "="))
+                
+
+                if ':<' in pair:
+                    key, value = pair.split(':<') # questa riga fa in modo che se ci sono più ":" prenda solo il primo
+                    print(f"Campo: {key}, Valore: {value}")
+                    if key == "release_year" or key == "average_rating":
+                        criteria.append((key, value, "<"))
+                    else:
+                        print(f"Query non valida: {key}, reinserire la query.")
+                        return [], []
+                # Query con maggiore
+                elif ':>' in pair:
+                    key, value = pair.split(':>') # questa riga fa in modo che se ci sono più ":" prenda solo il primo
+                    print(f"Campo: {key}, Valore: {value}")
+                    if key == "release_year" or key == "average_rating":
+                        criteria.append((key, value, ">"))
+                    else:
+                        print(f"Query non valida: {key}, reinserire la query.")
+                        return [], []
                 else:
-                    print(f"Campo non valido: {key}, reinserire la query.")
-                    return [], []
-            elif '<' in pair:
-                key, value = pair.split('<') # questa riga fa in modo che se ci sono più ":" prenda solo il primo
-                print(f"Campo: {key}, Valore: {value}")
-                if key == "release_year" or key == "average_rating":
-                    criteria.append((key, value, "<"))
-                else:
-                    print(f"Query non valida: {key}, reinserire la query.")
-                    return [], []
-            elif '>' in pair:
-                key, value = pair.split('>') # questa riga fa in modo che se ci sono più ":" prenda solo il primo
-                print(f"Campo: {key}, Valore: {value}")
-                if key == "release_year" or key == "average_rating":
-                    criteria.append((key, value, ">"))
-                else:
-                    print(f"Query non valida: {key}, reinserire la query.")
-                    return [], []
+                    key, value = pair.split(':') # questa riga fa in modo che se ci sono più ":" prenda solo il primo
+                    print(f"Campo: {key}, Valore: {value}")
+                    if key in columns:
+                        criteria.append((key, value, "="))
+                    else:
+                        print(f"Campo non valido: {key}, reinserire la query.")
+                        return [], []
+            # Query con una parola
             else:
                 # fallback: se scrive solo una parola senza campo, assume sia il titolo
                 criteria.append(("title", pair, "="))
@@ -77,9 +83,11 @@ class SearchEngine:
         cur = self.conn.cursor()
         sql_query = SearchEngine.generate_query(field, value, operation)
         if field == "release_year":
-            value = int(value)
+            if 'TO' not in value:
+                value = int(value)
         elif field == "average_rating":
-            value = float(value)
+            if 'TO' not in value:
+                value = float(value)
         cur.execute(sql_query, (value,))
         results = cur.fetchall()
         cur.close()
@@ -88,21 +96,41 @@ class SearchEngine:
     @staticmethod
     def generate_query(field, search_value, operation, ranking_method='tfidf'):
         if field == "release_year":
-            query = f"""
-            SELECT title, release_year, genres, description, type, average_rating
-            FROM dataset
-            WHERE {field} {operation} %s
-            ORDER BY {field} DESC
-            LIMIT 10;
-            """
+            if 'TO' in search_value:
+                val = search_value.split(" TO ")
+                query = f"""
+                SELECT title, release_year, genres, description, type, average_rating
+                FROM dataset
+                WHERE {field} BETWEEN {int(val[0][1:])} AND {int(val[1][:-1])}
+                ORDER BY {field} DESC
+                LIMIT 10;
+                """
+            else:
+                query = f"""
+                SELECT title, release_year, genres, description, type, average_rating
+                FROM dataset
+                WHERE {field} {operation} %s
+                ORDER BY {field} DESC
+                LIMIT 10;
+                """
         elif field == "average_rating":
-            query = f"""
-            SELECT title, release_year, genres, description, type, average_rating
-            FROM dataset
-            WHERE ROUND({field}::numeric,1) {operation} %s
-            ORDER BY {field} DESC
-            LIMIT 10;
-            """
+            if 'TO' in search_value:
+                val = search_value.split(" TO ")
+                query = f"""
+                SELECT title, release_year, genres, description, type, average_rating
+                FROM dataset
+                WHERE ROUND({field}::numeric,1) BETWEEN {float(val[0][1:])} AND {float(val[1][:-1])}
+                ORDER BY {field} DESC
+                LIMIT 10;
+                """
+            else:        
+                query = f"""
+                SELECT title, release_year, genres, description, type, average_rating
+                FROM dataset
+                WHERE ROUND({field}::numeric,1) {operation} %s
+                ORDER BY {field} DESC
+                LIMIT 10;
+                """
         else:
             ts_vector = SearchEngine.generate_ts_vector(field)
             ts_query = "plainto_tsquery('english', %s)"  # Cambia to_tsquery con plainto_tsquery
@@ -197,15 +225,31 @@ class SearchEngine:
             WHERE """  
             for field, value, o in criteria:
                 if field == "release_year":
-                    app.append(f"""
-                        {field} {o} %s
-                    """)
-                    values.append(value)
+                    if 'TO' in value:
+                        app.append(f"""
+                            {field} BETWEEN %s AND %s
+                        """)
+                        val = value.split(" TO ")
+                        values.append(int(val[0][1:]))
+                        values.append(int(val[1][:-1]))
+                    else:
+                        app.append(f"""
+                            {field} {o} %s
+                        """)
+                        values.append(value)
                 elif field == "average_rating":
-                    app.append(f"""
-                    ROUND({field}::numeric,1) {o} %s
-                    """)
-                    values.append(value)
+                    if 'TO' in value:
+                        app.append(f"""
+                            ROUND({field}::numeric,1) BETWEEN %s AND %s
+                        """)
+                        val = value.split(" TO ")
+                        values.append(int(val[0][1:]))
+                        values.append(int(val[1][:-1]))
+                    else:
+                        app.append(f"""
+                        ROUND({field}::numeric,1) {o} %s
+                        """)
+                        values.append(value)
                 else:
                     ts_vector = SearchEngine.generate_ts_vector(field)
                     values.append(value)
@@ -248,15 +292,31 @@ class SearchEngine:
             WHERE """
             for field, value, o in criteria:
                 if field == "release_year":
-                    app.append(f"""
-                        {field} {o} %s
-                    """)
-                    values.append(value)
+                    if 'TO' in value:
+                        app.append(f"""
+                            {field} BETWEEN %s AND %s
+                        """)
+                        val = value.split(" TO ")
+                        values.append(int(val[0][1:]))
+                        values.append(int(val[1][:-1]))
+                    else:
+                        app.append(f"""
+                            {field} {o} %s
+                        """)
+                        values.append(value)
                 elif field == "average_rating":
-                    app.append(f"""
-                    ROUND({field}::numeric,1) {o} %s
-                    """)
-                    values.append(value)
+                    if 'TO' in value:
+                        app.append(f"""
+                            ROUND({field}::numeric,1) BETWEEN %s AND %s
+                        """)
+                        val = value.split(" TO ")
+                        values.append(int(val[0][1:]))
+                        values.append(int(val[1][:-1]))
+                    else:
+                        app.append(f"""
+                        ROUND({field}::numeric,1) {o} %s
+                        """)
+                        values.append(value)
                 else:
                     ts_vector = SearchEngine.generate_ts_vector(field)
                     values.append(value)
