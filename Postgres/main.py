@@ -5,6 +5,7 @@ from indexing import create_indexes
 from search_engine import SearchEngine  # Import the SearchEngine class from search_engine.py
 # Python library to visualize in a correct way html characters in the console
 from html import unescape
+import shutil
 
 import psycopg2
 import time
@@ -79,25 +80,34 @@ def main():
             continue
         if result == 0:
             continue
-        os.system('cls' if os.name == 'nt' else 'clear')
+        #os.system('cls' if os.name == 'nt' else 'clear')
+        terminal_width = shutil.get_terminal_size().columns
+        titolo = "📌 \033[1mSearch Results:\033[0m"
+        print(titolo.center(terminal_width))
         for r in result:
-            print(f"\n🎬 {r[0]} (\033[1;32m{r[1] if r[1]!=-1 else 'Year not available'}\033[0m) - Type: \033[1;35m{r[4]}\033[0m) - ⭐ Average Rating:  \033[38;5;208m{r[5]}\033[0m)\n   {r[3]}")
-            if r[2] == "":
-                print("   Genere: N/A")
-            else:
-                print(f"   Genere: {r[2]}")
+            print(f"🎬 \033[1m{r[0]}\033[0m (\033[1;32m{r[1] if r[1] != -1 else 'Year not available'}\033[0m)")
+            print(f"📽️  \033[1mType:\033[0m \033[1;35m{r[4]}\033[0m")
+            print(f"⭐ \033[1mAverage Rating:\033[0m \033[1;38;5;229m{r[5]}\033[0m")
+            print(f"🎭 \033[1mGenre:\033[0m \033[38;5;208m{r[2] if r[2] else 'N/A'}\033[0m")
+            print(f"\n📝 \033[1mDescription:\033[0m\n   {r[3]}")
+
             # Campi headline: partono da r[6] in poi
+            found_snippet = False
             for i in range(6, len(r)):
                 snippet = r[i]
                 if not snippet or not isinstance(snippet, str):
                     continue
                 if "<b>" not in snippet:
                     continue
+                if not found_snippet:
+                    print("\n🔍 \033[1mSearch Highlights:\033[0m")
+                    found_snippet = True
                 testo_html = unescape(snippet)
                 testo_html = sub(r'<b>(.*?)</b>', '\033[1;34m\\1\033[0m', testo_html, flags=re.DOTALL)
-                print(f" 🔍 You can find the searched word here: {testo_html}...")
-
-            print("--------------------------------------------------")
+                print(f"   - {testo_html}...")
+            print()
+            print("-" * terminal_width)
+            print()
 
     # Close the connection
     print("Arrivederci!!!")
