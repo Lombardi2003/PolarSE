@@ -79,6 +79,7 @@ def main():
             continue
         if result == 0:
             continue
+        os.system('cls' if os.name == 'nt' else 'clear')
         for r in result:
             print(f"\n🎬 {r[0]} (\033[1;32m{r[1] if r[1]!=-1 else 'Year not available'}\033[0m) - Type: \033[1;35m{r[4]}\033[0m) - ⭐ Average Rating:  \033[38;5;208m{r[5]}\033[0m)\n   {r[3]}")
             if r[2] == "":
@@ -94,7 +95,7 @@ def main():
                     continue
                 testo_html = unescape(snippet)
                 testo_html = sub(r'<b>(.*?)</b>', '\033[1;34m\\1\033[0m', testo_html, flags=re.DOTALL)
-                print(f"   You can find the searched word here: {testo_html}...")
+                print(f" 🔍 You can find the searched word here: {testo_html}...")
 
             print("--------------------------------------------------")
 

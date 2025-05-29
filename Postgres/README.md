@@ -31,6 +31,6 @@ Qui inseriamo tutte le cose da fare, un programma da realizzare passo passo:
     - [X] Studiare se i due ranking e soprattuto il Search Engine funzioni con le query complesse 💻
 11. **Funzionalità aggiuntiva ✨**
     - [X] Stabilire la funzionalità aggiuntiva 🎯
-    - [ ] Realizzare la funzionalità aggiuntiva 🏁
+    - [X] Realizzare la funzionalità aggiuntiva 🏁
 12. **(Bonus) 🎁**
     - [X] Realizzare e modificare una lieve interfaccia grafica da terminale che faccia vedere una barra di caricamento per la popolazione del DB ⏳
