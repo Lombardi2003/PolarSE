@@ -2,13 +2,17 @@
 import os
 import zipfile
 from tqdm import tqdm  # Importiamo tqdm per la barra di avanzamento
-# Importazione di funzioni personali
+import Postgres.main_postgres
 from create_dataset import *
+# Richiamo la cartellla Postgres per avviare il suo main
+import Postgres  # Assicurati che il modulo postgres sia presente nella stessa directory
+from Postgres import *
 
 # Supponiamo che esista una cartella chiamata "Dataset"
 PATH = "Dataset"
 def postgres():
     print("Postgres è stato scelto come motore di ricerca.")
+    Postgres.main_postgres.main_postgres() # Chiama la funzione main del modulo Postgres
 def pylucene():
     print("Pylucene è stato scelto come motore di ricerca.")
 def whoosh():

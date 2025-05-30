@@ -1,8 +1,8 @@
 import re
-from database_config import DatabaseConfig
-from db_setup import create_db, create_table, popolate_table, table_exists, control_popolate, index_exists
-from indexing import create_indexes
-from search_engine import SearchEngine  # Import the SearchEngine class from search_engine.py
+from Postgres.database_config import DatabaseConfig
+from Postgres.db_setup import create_db, create_table, popolate_table, table_exists, control_popolate, index_exists
+from Postgres.indexing import create_indexes
+from Postgres.search_engine import SearchEngine  # Import the SearchEngine class from search_engine.py
 # Python library to visualize in a correct way html characters in the console
 from html import unescape
 import shutil
@@ -42,7 +42,7 @@ def close_connection(conn):
         conn.close()
         print("Connessione chiusa con successo.")
 
-def main():
+def main_postgres():
     os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
     database = DatabaseConfig()    # Create a new database configuration
     conn = db_connection(database) # Connect to the database
@@ -114,4 +114,4 @@ def main():
     close_connection(conn)
 
 if __name__ == '__main__':
-    main()
+    main_postgres()
