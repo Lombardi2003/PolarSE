@@ -328,36 +328,41 @@ class PyLuceneIR:
         reader.close()
         return results
 
-if __name__ == "__main__":
-    os.system('clear' if os.name == 'posix' else 'cls')
 
-    PyLuceneIR.create_index()
-    
-    original_query = input("\nINSERISCI LA QUERY DI RICERCA: ")
-    corrected_query = PyLuceneIR.check_spelling(original_query)
-    
-    # Nuova gestione input ranking
-    while True:
-        print("\nSCEGLI IL METODO DI RANKING DEI RISULTATI:")
-        ranking = input("1 BM25, predefinito di PyLucene\n2 TF-IDF, per confronto con PostgreSQL (1/2): ")
+    def main_pylucene():
+        os.system('clear' if os.name == 'posix' else 'cls')
+
+        PyLuceneIR.create_index()
         
-        if ranking in ('1', '2'):
-            break
-        print("\n\033[91mOPS! LA TUA SCELTA NON SEMBRA CORRETTA. DIGITA SOLAMENTE '1' O '2'.\033[0m\n")
-    
-    results = PyLuceneIR.search_index(corrected_query, ranking_method=ranking)
-    
-    for idx, doc in enumerate(results, 1):
-        t = doc.get("type", "UNKNOWN")
-        if t.lower() == "tv":
-            type_str = "TV SHOW"
-        elif t.lower() == "movie":
-            type_str = "MOVIE"
-        else:
-            type_str = t.upper()
-        print(f"\nRIS. {idx}: {doc['title']} [{type_str}]")
-        print(f"ANNO DI USCITA: {doc['release_year']}")
-        print(f"GENERI: {doc['genres']}")
-        print(f"VALUTAZIONE MEDIA: {doc['average_rating']}")
-        print(f"DESCRIZIONE (EN): {doc['description']}")
-        print("*" * 40)
+        original_query = input("\nINSERISCI LA QUERY DI RICERCA: ")
+        corrected_query = PyLuceneIR.check_spelling(original_query)
+        
+        # Nuova gestione input ranking
+        while True:
+            print("\nSCEGLI IL METODO DI RANKING DEI RISULTATI:")
+            ranking = input("1 BM25, predefinito di PyLucene\n2 TF-IDF, per confronto con PostgreSQL (1/2): ")
+            
+            if ranking in ('1', '2'):
+                break
+            print("\n\033[91mOPS! LA TUA SCELTA NON SEMBRA CORRETTA. DIGITA SOLAMENTE '1' O '2'.\033[0m\n")
+        
+        results = PyLuceneIR.search_index(corrected_query, ranking_method=ranking)
+        
+        for idx, doc in enumerate(results, 1):
+            t = doc.get("type", "UNKNOWN")
+            if t.lower() == "tv":
+                type_str = "TV SHOW"
+            elif t.lower() == "movie":
+                type_str = "MOVIE"
+            else:
+                type_str = t.upper()
+            print(f"\nRIS. {idx}: {doc['title']} [{type_str}]")
+            print(f"ANNO DI USCITA: {doc['release_year']}")
+            print(f"GENERI: {doc['genres']}")
+            print(f"VALUTAZIONE MEDIA: {doc['average_rating']}")
+            print(f"DESCRIZIONE (EN): {doc['description']}")
+            print("*" * 40)
+
+
+if __name__ == "__main__":
+    PyLuceneIR.main_pylucene()
