@@ -39,8 +39,8 @@ def preprocess_text(text):
     return " ".join(processed_tokens)
 
 class PyLuceneIR:
-    DATASET_PATH = "../Dataset"  # Qui ci sono i file JSON
-    INDEX_PATH = "lucene_index"             # Cartella per gli indici
+    DATASET_PATH = "Dataset"  # Qui ci sono i file JSON
+    INDEX_PATH = "Pylucene/lucene_index"             # Cartella per gli indici
     MAIN_INDEX = os.path.join(INDEX_PATH, "mainindex")  # Sottocartella per l'indice di ricerca
     SPELLCHECKER_INDEX = os.path.join(INDEX_PATH, "spellchecker")  # Sottocartella per spell correction
 
@@ -60,7 +60,7 @@ class PyLuceneIR:
         os.makedirs(PyLuceneIR.SPELLCHECKER_INDEX, exist_ok=True)
         
 
-    @staticmethod
+    #@staticmethod
     def create_index():
         PyLuceneIR.init_lucene()
         PyLuceneIR.prepare_index_dir()
@@ -332,7 +332,7 @@ class PyLuceneIR:
     def main_pylucene():
         os.system('clear' if os.name == 'posix' else 'cls')
 
-        PyLuceneIR.create_index()
+        #PyLuceneIR.create_index()
         
         original_query = input("\nINSERISCI LA QUERY DI RICERCA: ")
         corrected_query = PyLuceneIR.check_spelling(original_query)

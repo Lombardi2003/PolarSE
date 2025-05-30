@@ -2,3 +2,4 @@
 Dataset/
 __pycache__
 Whoosh/index/
+Pylucene/lucene_index/

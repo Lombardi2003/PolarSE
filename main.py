@@ -3,12 +3,16 @@ import os
 import zipfile
 from tqdm import tqdm  # Importiamo tqdm per la barra di avanzamento
 import Postgres.main_postgres
+import Pylucene.pylucene_IR
 import Whoosh.IRmodel
 import Whoosh.index
 from create_dataset import *
 # Richiamo la cartellla Postgres per avviare il suo main
 import Postgres  # Assicurati che il modulo postgres sia presente nella stessa directory
 from Postgres import *
+
+import Pylucene
+from Pylucene.pylucene_IR import PyLuceneIR
 
 import Whoosh
 from Whoosh import *
@@ -21,6 +25,7 @@ def postgres():
     Postgres.main_postgres.main_postgres() # Chiama la funzione main del modulo Postgres
 def pylucene():
     print("Pylucene è stato scelto come motore di ricerca.")
+    PyLuceneIR.main_pylucene()  # Chiama la funzione main del modulo Pylucene
 def whoosh():
     print("Whoosh è stato scelto come motore di ricerca.")
     Whoosh.IRmodel.main_whoosh()  # Chiama la funzione main del modulo Whoosh
@@ -58,7 +63,8 @@ def setup():
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Pylucene...")
-    print("Pylucene è stato settupato correttamente!")
+    PyLuceneIR.create_index()  # Chiama la funzione create_index del modulo Pylucene
+    print("\nPylucene è stato settupato correttamente!")
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Whoosh...")
@@ -74,7 +80,7 @@ def setup():
 # Funzione main
 def main():
     download_dataset()
-    setup()
+    #setup()
     os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
     print("Benvenuto nel programma di gestione del dataset!")
     while True:
