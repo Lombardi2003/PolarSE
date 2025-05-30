@@ -40,9 +40,8 @@ def db_connection(config):
 def close_connection(conn):
     if conn:
         conn.close()
-        print("Connessione chiusa con successo.")
 
-def main_postgres():
+def setup_postgres():
     os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
     database = DatabaseConfig()    # Create a new database configuration
     conn = db_connection(database) # Connect to the database
@@ -62,7 +61,14 @@ def main_postgres():
 
     if index_exists(conn) is True:
         create_indexes(conn) # Creazione degli indici
+        
+    close_connection(conn)
+
+def main_postgres():
     
+    database = DatabaseConfig()    # Create a new database configuration
+    conn = db_connection(database) # Connect to the database
+
     # Prompt per la scelta del ranking
     ricerca = SearchEngine(database, conn)  # Create an instance of the SearchEngine class
     print("Benvenuto nel motore di ricerca!\n")
@@ -80,7 +86,7 @@ def main_postgres():
             continue
         if result == 0:
             continue
-        #os.system('cls' if os.name == 'nt' else 'clear')
+        os.system('cls' if os.name == 'nt' else 'clear')
         terminal_width = shutil.get_terminal_size().columns
         titolo = "📌 \033[1mSearch Results:\033[0m"
         print(titolo.center(terminal_width))

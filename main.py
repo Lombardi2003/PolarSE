@@ -61,6 +61,7 @@ def setup():
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Postgres...")
+    Postgres.main_postgres.setup_postgres()  # Chiama la funzione setup_postgres del modulo Postgres
     print("Postgres è stato settupato correttamente!")
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -84,7 +85,7 @@ def main():
     nltk.download('punkt_tab')  # Scarica il pacchetto NLTK per il tokenizzatore
     os.system('cls' if os.name == 'nt' else 'clear')
     download_dataset()
-    setup()
+    #setup()
     os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
     print("Benvenuto nel programma di gestione del dataset!")
     while True:

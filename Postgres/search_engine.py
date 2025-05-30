@@ -19,7 +19,6 @@ class SearchEngine:
             pairs.append(text.strip())
             #pairs = text.strip().split()
         criteria = []
-        print(f"Query inserita e processata: {pairs}")
         for pair in pairs:
             # Query con uguale
             if ':' in pair:
@@ -27,7 +26,6 @@ class SearchEngine:
 
                 if ':<' in pair:
                     key, value = pair.split(':<') # questa riga fa in modo che se ci sono più ":" prenda solo il primo
-                    print(f"Campo: {key}, Valore: {value}")
                     if key == "release_year" or key == "average_rating":
                         criteria.append((key, value, "<"))
                     else:
@@ -36,7 +34,6 @@ class SearchEngine:
                 # Query con maggiore
                 elif ':>' in pair:
                     key, value = pair.split(':>') # questa riga fa in modo che se ci sono più ":" prenda solo il primo
-                    print(f"Campo: {key}, Valore: {value}")
                     if key == "release_year" or key == "average_rating":
                         criteria.append((key, value, ">"))
                     else:
@@ -44,7 +41,6 @@ class SearchEngine:
                         return [], []
                 else:
                     key, value = pair.split(':') # questa riga fa in modo che se ci sono più ":" prenda solo il primo
-                    print(f"Campo: {key}, Valore: {value}")
                     if key in columns:
                         criteria.append((key, value, "="))
                     else:
@@ -154,7 +150,6 @@ class SearchEngine:
                 ORDER BY rank DESC
                 LIMIT 10;
                 """
-        print(query)
         return query
 
     def tfidf_search(self):
@@ -213,7 +208,6 @@ class SearchEngine:
             query = f"""
             SELECT title, release_year, genres, description, type, average_rating,"""
             ts_vector = ""
-            print(f"Criteria: {criteria}")
             for field, value, o in criteria:
                 if field == "release_year" or field == "average_rating":
                     continue
@@ -287,7 +281,6 @@ class SearchEngine:
             query = f"""
             SELECT title, release_year, genres, description, type, average_rating,"""
             ts_vector = ""
-            print(f"Criteria: {criteria}")
             for field, value, o in criteria:
                 if field == "release_year" or field == "average_rating":
                     continue
@@ -358,8 +351,6 @@ class SearchEngine:
         # Inserisce prima i valori per ts_headline, poi gli altri
         final_values = headline_values + values
 
-        print(query)
-        print(f"Valori: {final_values}")
         return query, final_values
 
     @staticmethod
