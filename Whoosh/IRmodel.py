@@ -54,13 +54,9 @@ class IRModel:
         searcher.close()
         return res_dict
 
-
-
-# Gestione dell'interfaccia utente
-if __name__ == '__main__':
-
+def main_whoosh():
     # apertura dell'indice
-    with open('config.yaml', 'r') as file:
+    with open('Whoosh/config.yaml', 'r') as file:
         config_data = yaml.safe_load(file)
     index_dir = f"{config_data['INDEX']['MAINDIR']}/{config_data['INDEX']['ACCDIR']}"
 
@@ -111,3 +107,9 @@ if __name__ == '__main__':
             print("-" * 40)
     else:
         print("Nessun documento trovato.")
+
+
+# Gestione dell'interfaccia utente
+if __name__ == '__main__':
+
+    main_whoosh()

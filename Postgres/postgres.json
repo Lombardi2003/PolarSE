@@ -1,6 +1,6 @@
 {
     "NETWORK_SETTINGS": {
-        "IP_ADDRESS": "127.0.0.1",
+        "IP_ADDRESS": "host.docker.internal",
         "PORT_NUMBER": 5432,
         "RECONNECT_ATTEMPTS": 7,
         "RECONNECT_INTERVAL": 1

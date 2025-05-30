@@ -3,10 +3,16 @@ import os
 import zipfile
 from tqdm import tqdm  # Importiamo tqdm per la barra di avanzamento
 import Postgres.main_postgres
+import Whoosh.IRmodel
+import Whoosh.index
 from create_dataset import *
 # Richiamo la cartellla Postgres per avviare il suo main
 import Postgres  # Assicurati che il modulo postgres sia presente nella stessa directory
 from Postgres import *
+
+import Whoosh
+from Whoosh import *
+import time
 
 # Supponiamo che esista una cartella chiamata "Dataset"
 PATH = "Dataset"
@@ -17,6 +23,7 @@ def pylucene():
     print("Pylucene è stato scelto come motore di ricerca.")
 def whoosh():
     print("Whoosh è stato scelto come motore di ricerca.")
+    Whoosh.IRmodel.main_whoosh()  # Chiama la funzione main del modulo Whoosh
 
 search = [postgres,pylucene,whoosh,exit]  # Lista dei motori di ricerca disponibili
 
@@ -44,12 +51,23 @@ def download_dataset():# Apri il file ZIP e estrai tutto il suo contenuto nella 
 
 def setup():
     print("Setup in corso...")
+    time.sleep(2)  # Attendi 3 secondi
+    os.system('cls' if os.name == 'nt' else 'clear')
     print("Postgres...")
+    print("Postgres è stato settupato correttamente!")
+    time.sleep(2)  # Attendi 3 secondi
+    os.system('cls' if os.name == 'nt' else 'clear')
     print("Pylucene...")
+    print("Pylucene è stato settupato correttamente!")
+    time.sleep(2)  # Attendi 3 secondi
+    os.system('cls' if os.name == 'nt' else 'clear')
     print("Whoosh...")
+    i = Whoosh.index.main_whoosh_setup()  # Chiama la funzione main del modulo Whoosh
+    print("\nWhoosh è stato settupato correttamente!")
+    time.sleep(2)  # Attendi 3 secondi
+    os.system('cls' if os.name == 'nt' else 'clear')
     print("Setup completato!")
     # Aspetto 3 secondi prima di pulire la console
-    import time
     time.sleep(3)  # Attendi 3 secondi
 
 
@@ -65,9 +83,10 @@ def main():
         print("2: Pylucene")
         print("3: Whoosh")
         print("4: EXIT")
-        choice = int(input("Inserisci la tua scelta (1/2/3): "))-1
+        choice = int(input("Inserisci la tua scelta (1/2/3/4): "))-1
         search[choice]()
 
 # Inizio programma
 if __name__ == '__main__':
+    os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
     main()

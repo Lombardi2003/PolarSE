@@ -55,7 +55,7 @@ class Index:
     def createIndex(self):
 
         # lettura del file config.yaml
-        with open('config.yaml', 'r') as file:
+        with open('Whoosh/config.yaml', 'r') as file:
             config_data = yaml.safe_load(file)
         index_dir = os.path.join(config_data['INDEX']['MAINDIR'], config_data['INDEX']['ACCDIR'])
         data_dir = config_data['DATA']['DATADIR']
@@ -121,5 +121,9 @@ class Index:
         writer.commit()
         return ix
 
+def main_whoosh_setup():
+    print("Inizio indicizzazione con Whoosh...")
+    return Index()
+
 if __name__ == '__main__':
-    my_index = Index()
+    main_whoosh_setup()

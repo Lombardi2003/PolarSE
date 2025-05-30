@@ -1,6 +1,6 @@
 INDEX:
-  MAINDIR: "index"              # dove vengono memorizzate le strutture per l'indice (cartella padre)
+  MAINDIR: "Whoosh/index"              # dove vengono memorizzate le strutture per l'indice (cartella padre)
   ACCDIR: "movie_index"         # dove vengono memorizzati i file .json effettivamente indicizzati (cartella figlio)
 
 DATA:
-  DATADIR: "dataset_film_tv_completo"  # cartella dalla quale prendere i dati da indicizzare (cartella con file .json)
+  DATADIR: "Dataset"  # cartella dalla quale prendere i dati da indicizzare (cartella con file .json)
