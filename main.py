@@ -16,6 +16,8 @@ from Pylucene.pylucene_IR import PyLuceneIR
 
 import Whoosh
 from Whoosh import *
+
+import nltk  # Importa la libreria NLTK per il tokenizzatore
 import time
 
 # Supponiamo che esista una cartella chiamata "Dataset"
@@ -79,6 +81,7 @@ def setup():
 
 # Funzione main
 def main():
+    nltk.download('punkt_tab')  # Scarica il pacchetto NLTK per il tokenizzatore
     download_dataset()
     setup()
     os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
