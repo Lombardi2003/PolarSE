@@ -85,7 +85,7 @@ def main():
     nltk.download('punkt_tab')  # Scarica il pacchetto NLTK per il tokenizzatore
     os.system('cls' if os.name == 'nt' else 'clear')
     download_dataset()
-    #setup()
+    setup()
     os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
     print("Benvenuto nel programma di gestione del dataset!")
     while True:
