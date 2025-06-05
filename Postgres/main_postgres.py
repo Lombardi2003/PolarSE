@@ -82,6 +82,7 @@ def main_postgres():
             elif scelta == '2':
                 result = ricerca.bm25_search()
             elif scelta == '3':
+                os.system('cls' if os.name == 'nt' else 'clear')
                 # Close the connection
                 close_connection(conn)
                 return 0
