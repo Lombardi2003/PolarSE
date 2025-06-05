@@ -13,9 +13,10 @@ import os
 from re import sub
 
 # DB connection
-def db_connection(config):
+def db_connection(config, retry=True):
     for i in range(config.RECONNECT_ATTEMPTS):
-        print(f"Tentativo di connessione al database {i+1}/{config.RECONNECT_ATTEMPTS}...")
+        if retry:
+            print(f"Tentativo di connessione al database {i+1}/{config.RECONNECT_ATTEMPTS}...")
         try:
             conn = psycopg2.connect(
                 dbname=config.DB_NAME,
@@ -67,18 +68,20 @@ def setup_postgres():
 def main_postgres():
     
     database = DatabaseConfig()    # Create a new database configuration
-    conn = db_connection(database) # Connect to the database
+    conn = db_connection(database, False) # Connect to the database
 
     # Prompt per la scelta del ranking
     ricerca = SearchEngine(database, conn)  # Create an instance of the SearchEngine class
     print("Benvenuto nel motore di ricerca!\n")
     print("\nScegli il ranking da utilizzare per la ricerca:")
-    scelta=input("1: TF-IDF (basato su ts_rank, metodo di default per Postgres); \n2: BM25 (basato su ts_rank_cd);\nSCELTA: ")
+    scelta=input("1: TF-IDF (basato su ts_rank, metodo di default per Postgres); \n2: BM25 (basato su ts_rank_cd); \n3: Torna al menù scelta del Search Engine; \nSCELTA: ")
     try:
         if scelta == '1':
             result = ricerca.tfidf_search()
         elif scelta == '2':
             result = ricerca.bm25_search()
+        elif scelta == '3':
+            return 0
     except Exception:
         print("Scelta non valida.")
         return 0
