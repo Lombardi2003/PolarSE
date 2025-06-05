@@ -94,9 +94,18 @@ def main():
             print("1: Postgres")
             print("2: Pylucene")
             print("3: Whoosh")
-            print("4: EXIT")
-            choice = int(input("Inserisci la tua scelta (1/2/3/4): "))-1
-            search[choice]()
+            print("4: Esci dal programma")
+            print("61016: Una sorpresa")
+            choice = int(input("Inserisci la tua scelta (1/2/3/4): "))
+            if choice==61016:
+                os.system('cls' if os.name == 'nt' else 'clear')
+                print("*" * 40)
+                print("If you see something that doesn't look right,")
+                print("Speak to staff or text police. 61016. We'll sort it.\n")
+                print("See it. Say it. Sorted!")
+                print("*" * 40)
+            else:
+                search[choice-1]()
         except Exception:
             print("Comando non valido!!!")
 
