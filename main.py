@@ -89,13 +89,16 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
     print("Benvenuto nel programma di gestione del dataset!")
     while True:
-        print("Scegli quale motore di ricerca vuoi utilizzare:")
-        print("1: Postgres")
-        print("2: Pylucene")
-        print("3: Whoosh")
-        print("4: EXIT")
-        choice = int(input("Inserisci la tua scelta (1/2/3/4): "))-1
-        search[choice]()
+        try:
+            print("Scegli quale motore di ricerca vuoi utilizzare:")
+            print("1: Postgres")
+            print("2: Pylucene")
+            print("3: Whoosh")
+            print("4: EXIT")
+            choice = int(input("Inserisci la tua scelta (1/2/3/4): "))-1
+            search[choice]()
+        except Exception:
+            print("Comando non valido!!!")
 
 # Inizio programma
 if __name__ == '__main__':
