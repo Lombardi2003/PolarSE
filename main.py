@@ -31,8 +31,14 @@ def pylucene():
 def whoosh():
     print("Whoosh è stato scelto come motore di ricerca.")
     Whoosh.IRmodel.main_whoosh()  # Chiama la funzione main del modulo Whoosh
+def uscita():
+    print("Uscita dal programma...")
+    print("Arrivarderci!")
+    time.sleep(1)  # Attendi 1 secondo
+    os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
+    exit()  # Esce dal programma
 
-search = [postgres,pylucene,whoosh,exit]  # Lista dei motori di ricerca disponibili
+search = [postgres,pylucene,whoosh,uscita]  # Lista dei motori di ricerca disponibili
 
 def download_dataset():# Apri il file ZIP e estrai tutto il suo contenuto nella directory di destinazione
     if os.path.isdir(PATH):
