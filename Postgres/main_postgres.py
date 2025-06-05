@@ -81,8 +81,10 @@ def main_postgres():
                 result = ricerca.tfidf_search()
             elif scelta == '2':
                 result = ricerca.bm25_search()
-        elif scelta == '3':
-            return 0
+            elif scelta == '3':
+                # Close the connection
+                close_connection(conn)
+                return 0
         except Exception:
             print("Scelta non valida.")
             continue
@@ -117,9 +119,6 @@ def main_postgres():
             print()
             print("-" * terminal_width)
             print()
-
-    # Close the connection
-    close_connection(conn)
 
 if __name__ == '__main__':
     main_postgres()
