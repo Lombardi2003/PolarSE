@@ -68,17 +68,17 @@ def setup():
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Postgres...")
     Postgres.main_postgres.setup_postgres()  # Chiama la funzione setup_postgres del modulo Postgres
-    print("Postgres è stato settupato correttamente!")
+    print("Postgres è stato setuppato correttamente!")
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Pylucene...")
     PyLuceneIR.create_index()  # Chiama la funzione create_index del modulo Pylucene
-    print("\nPylucene è stato settupato correttamente!")
+    print("\nPylucene è stato setuppato correttamente!")
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Whoosh...")
     i = Whoosh.index.main_whoosh_setup()  # Chiama la funzione main del modulo Whoosh
-    print("\nWhoosh è stato settupato correttamente!")
+    print("\nWhoosh è stato setuppato correttamente!")
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Setup completato!")
