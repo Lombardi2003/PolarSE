@@ -67,17 +67,17 @@ def setup():
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Postgres...")
-    Postgres.main_postgres.setup_postgres()  # Chiama la funzione setup_postgres del modulo Postgres
+    #Postgres.main_postgres.setup_postgres()  # Chiama la funzione setup_postgres del modulo Postgres
     print("Postgres è stato setuppato correttamente!")
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Pylucene...")
-    PyLuceneIR.create_index()  # Chiama la funzione create_index del modulo Pylucene
+    #PyLuceneIR.create_index()  # Chiama la funzione create_index del modulo Pylucene
     print("\nPylucene è stato setuppato correttamente!")
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Whoosh...")
-    i = Whoosh.index.main_whoosh_setup()  # Chiama la funzione main del modulo Whoosh
+    #i = Whoosh.index.main_whoosh_setup()  # Chiama la funzione main del modulo Whoosh
     print("\nWhoosh è stato setuppato correttamente!")
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -105,11 +105,12 @@ def main():
             choice = int(input("Inserisci la tua scelta (1/2/3/4): "))
             if choice==61016:
                 os.system('cls' if os.name == 'nt' else 'clear')
-                print("*" * 45)
+                print("*" * 60)
                 print("If you see something that doesn't look right,")
-                print("Speak to staff or text police. 61016. We'll sort it.\n")
+                print("Speak to staff or text police. 61016.")
+                print("We'll sort it.\n")
                 print("See it. Say it. Sorted!")
-                print("*" * 45)
+                print("*" * 60)
                 time.sleep(6)  # Mostra l'easter egg per 6 secondi, poi ritorna al menu principale
                 os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
             else:

@@ -9,7 +9,7 @@ from glob import glob
 import lucene
 from java.nio.file import Paths
 from org.apache.lucene.analysis.standard import StandardAnalyzer
-from org.apache.lucene.document import Document, Field, TextField, StoredField, IntPoint, StringField
+from org.apache.lucene.document import Document, Field, TextField, StoredField, IntPoint, StringField, DoublePoint
 from org.apache.lucene.index import IndexWriter, IndexWriterConfig, Term, DirectoryReader
 from org.apache.lucene.store import FSDirectory
 from org.apache.lucene.search import IndexSearcher, BooleanQuery, BooleanClause, TermQuery, PhraseQuery
@@ -127,7 +127,7 @@ class PyLuceneIR:
                     try:
                         rating = float(average_rating)
                         doc.add(StoredField("average_rating", str(rating)))
-                        doc.add(IntPoint("average_rating", int(rating)))
+                        doc.add(DoublePoint("average_rating", rating))
                         doc.add(StringField("average_rating_str", str(rating), Field.Store.NO))
                     except ValueError:
                         print(f"Valore non valido per average_rating in {file}: {average_rating}")
@@ -228,11 +228,62 @@ class PyLuceneIR:
                         builder.add(subquery, occur)
                         continue
 
+                if field.lower() == "average_rating":
+                    # Provo un match esatto su float (es. "4.0" o "4")
+                    try:
+                        fval = float(value)
+                        subquery = DoublePoint.newExactQuery("average_rating", fval)
+                        occur = (BooleanClause.Occur.SHOULD 
+                                if (force_should and current_operator != BooleanClause.Occur.MUST_NOT) 
+                                else current_operator)
+                        builder.add(subquery, occur)
+                        continue
+                    except ValueError:
+                        # Non è un float esatto, passo alla gestione range
+                        pass
+
+                    # Gestione range su float (>=, >, <=, <)
+                    if any(value.startswith(op) for op in (">=", ">", "<=", "<")):
+                        op = value[:2] if value[:2] in (">=", "<=") else value[0]
+                        raw = value[2:] if op in (">=", "<=") else value[1:]
+                        try:
+                            fval = float(raw)
+                            if op == ">=":
+                                subquery = DoublePoint.newRangeQuery("average_rating", fval, float("Infinity"))
+                            elif op == ">":
+                                import math
+                                subquery = DoublePoint.newRangeQuery(
+                                    "average_rating",
+                                    math.nextafter(fval, float("inf")),
+                                    float("Infinity")
+                                )
+                            elif op == "<=":
+                                subquery = DoublePoint.newRangeQuery("average_rating", float("-Infinity"), fval)
+                            elif op == "<":
+                                import math
+                                subquery = DoublePoint.newRangeQuery(
+                                    "average_rating",
+                                    float("-Infinity"),
+                                    math.nextafter(fval, float("-inf"))
+                                )
+                        except ValueError:
+                            subquery = None
+
+                        if subquery is not None:
+                            occur = (BooleanClause.Occur.SHOULD 
+                                    if (force_should and current_operator != BooleanClause.Occur.MUST_NOT) 
+                                    else current_operator)
+                            builder.add(subquery, occur)
+                        continue
+
+                    # Se non è né un float né un range, ignoro il token
+                    continue
+
                 # Mappatura speciale per genres
                 if field.lower() == "genres":
                     field = "genres_txt"
 
-                # Gestione range numerico
+                # Gestione range numerico per NON float
                 if any(value.startswith(op) for op in (">=", ">", "<=", "<")):
                     op = value[:2] if value[:2] in (">=", "<=") else value[0]
                     num_val = value[2:] if op in (">=", "<=") else value[1:]
@@ -347,7 +398,6 @@ class PyLuceneIR:
         original_query = input("\nINSERISCI LA QUERY DI RICERCA: ")
         corrected_query = PyLuceneIR.check_spelling(original_query)
         
-        # Nuova gestione input ranking
         while True:
             print("\nSCEGLI IL METODO DI RANKING DEI RISULTATI:")
             ranking = input("1 BM25, predefinito di PyLucene\n2 TF-IDF, per confronto con PostgreSQL (1/2): ")
