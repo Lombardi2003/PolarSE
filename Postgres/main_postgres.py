@@ -115,7 +115,6 @@ def main_postgres():
         print()
 
     # Close the connection
-    print("Arrivederci!!!")
     close_connection(conn)
 
 if __name__ == '__main__':
