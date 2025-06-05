@@ -93,7 +93,7 @@ def main():
     download_dataset()
     #setup()
     os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
-    print("Benvenuto nel programma di gestione del dataset!")
+    print("BENVENUTO NEL PROGRAMMA DI GESTIONE DEL DATASET PER FILM E SERIE TV!")
     while True:
         try:
             print("Scegli quale motore di ricerca vuoi utilizzare:")
@@ -113,7 +113,7 @@ def main():
             else:
                 search[choice-1]()
         except Exception:
-            print("Comando non valido!!!")
+            print("\n\033[91mOPS! LA TUA SCELTA NON SEMBRA CORRETTA...\033[0m\n")
 
 # Inizio programma
 if __name__ == '__main__':
