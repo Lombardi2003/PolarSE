@@ -46,7 +46,7 @@ def setup_postgres():
     database = DatabaseConfig()    # Create a new database configuration
     conn = db_connection(database) # Connect to the database
     if conn is None:  
-        time.sleep(3)  # Attendi 3 secondi
+        time.sleep(1)  # Attendi 3 secondi
         os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
         print("Creazione del database in corso...\n")
         create_db(database) # Avvia lo script di creazione del DB
@@ -72,48 +72,47 @@ def main_postgres():
     # Prompt per la scelta del ranking
     ricerca = SearchEngine(database, conn)  # Create an instance of the SearchEngine class
     print("Benvenuto nel motore di ricerca!\n")
-    while True:
-        print("\nScegli il ranking da utilizzare per la ricerca:")
-        scelta=input("1: TF-IDF (basato su ts_rank, metodo di default per Postgres); \n2: BM25 (basato su ts_rank_cd);\n3: EXIT\nSCELTA: ")
+    print("\nScegli il ranking da utilizzare per la ricerca:")
+    scelta=input("1: TF-IDF (basato su ts_rank, metodo di default per Postgres); \n2: BM25 (basato su ts_rank_cd);\nSCELTA: ")
+    try:
         if scelta == '1':
             result = ricerca.tfidf_search()
         elif scelta == '2':
             result = ricerca.bm25_search()
-        elif scelta == '3':
-            break
-        else:
-            print("Scelta non valida.")
-            continue
-        if result == 0:
-            continue
-        os.system('cls' if os.name == 'nt' else 'clear')
-        terminal_width = shutil.get_terminal_size().columns
-        titolo = "📌 \033[1mSearch Results:\033[0m"
-        print(titolo.center(terminal_width))
-        for r in result:
-            print(f"🎬 \033[1m{r[0]}\033[0m (\033[1;32m{r[1] if r[1] != -1 else 'Year not available'}\033[0m)")
-            print(f"📽️  \033[1mType:\033[0m \033[1;35m{r[4]}\033[0m")
-            print(f"⭐ \033[1mAverage Rating:\033[0m \033[1;38;5;229m{r[5]}\033[0m")
-            print(f"🎭 \033[1mGenre:\033[0m \033[38;5;208m{r[2] if r[2] else 'N/A'}\033[0m")
-            print(f"\n📝 \033[1mDescription:\033[0m\n   {r[3]}")
+    except Exception:
+        print("Scelta non valida.")
+        return 0
 
-            # Campi headline: partono da r[6] in poi
-            found_snippet = False
-            for i in range(6, len(r)):
-                snippet = r[i]
-                if not snippet or not isinstance(snippet, str):
-                    continue
-                if "<b>" not in snippet:
-                    continue
-                if not found_snippet:
-                    print("\n🔍 \033[1mSearch Highlights:\033[0m")
-                    found_snippet = True
-                testo_html = unescape(snippet)
-                testo_html = sub(r'<b>(.*?)</b>', '\033[1;34m\\1\033[0m', testo_html, flags=re.DOTALL)
-                print(f"   - {testo_html}...")
-            print()
-            print("-" * terminal_width)
-            print()
+    if result == 0:
+        print("❌Nessun risultato trovato.")
+    os.system('cls' if os.name == 'nt' else 'clear')
+    terminal_width = shutil.get_terminal_size().columns
+    titolo = "📌 \033[1mSearch Results:\033[0m"
+    print(titolo.center(terminal_width))
+    for r in result:
+        print(f"🎬 \033[1m{r[0]}\033[0m (\033[1;32m{r[1] if r[1] != -1 else 'Year not available'}\033[0m)")
+        print(f"📽️  \033[1mType:\033[0m \033[1;35m{r[4]}\033[0m")
+        print(f"⭐ \033[1mAverage Rating:\033[0m \033[1;38;5;229m{r[5]}\033[0m")
+        print(f"🎭 \033[1mGenre:\033[0m \033[38;5;208m{r[2] if r[2] else 'N/A'}\033[0m")
+        print(f"\n📝 \033[1mDescription:\033[0m\n   {r[3]}")
+
+        # Campi headline: partono da r[6] in poi
+        found_snippet = False
+        for i in range(6, len(r)):
+            snippet = r[i]
+            if not snippet or not isinstance(snippet, str):
+                continue
+            if "<b>" not in snippet:
+                continue
+            if not found_snippet:
+                print("\n🔍 \033[1mSearch Highlights:\033[0m")
+                found_snippet = True
+            testo_html = unescape(snippet)
+            testo_html = sub(r'<b>(.*?)</b>', '\033[1;34m\\1\033[0m', testo_html, flags=re.DOTALL)
+            print(f"   - {testo_html}...")
+        print()
+        print("-" * terminal_width)
+        print()
 
     # Close the connection
     print("Arrivederci!!!")
