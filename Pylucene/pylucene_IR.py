@@ -218,6 +218,16 @@ class PyLuceneIR:
                     builder.add(subquery, occur)
                     continue
 
+                if field.lower() == "release_year":
+                    if value.isdigit():
+                        num_val = int(value)
+                        subquery = IntPoint.newRangeQuery("release_year", num_val, num_val)
+                        occur = (BooleanClause.Occur.SHOULD 
+                                if (force_should and current_operator != BooleanClause.Occur.MUST_NOT) 
+                                else current_operator)
+                        builder.add(subquery, occur)
+                        continue
+
                 # Mappatura speciale per genres
                 if field.lower() == "genres":
                     field = "genres_txt"
