@@ -105,11 +105,13 @@ def main():
             choice = int(input("Inserisci la tua scelta (1/2/3/4): "))
             if choice==61016:
                 os.system('cls' if os.name == 'nt' else 'clear')
-                print("*" * 40)
+                print("*" * 45)
                 print("If you see something that doesn't look right,")
                 print("Speak to staff or text police. 61016. We'll sort it.\n")
                 print("See it. Say it. Sorted!")
-                print("*" * 40)
+                print("*" * 45)
+                time.sleep(6)  # Mostra l'easter egg per 6 secondi, poi ritorna al menu principale
+                os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
             else:
                 search[choice-1]()
         except Exception:
