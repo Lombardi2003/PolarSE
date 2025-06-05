@@ -1,0 +1,7 @@
+Query per golden list
+
+Q1: twilight
+Q2: harry potter
+Q3: genres:adventure AND release_year:2020
+Q4: 
+Q5:
