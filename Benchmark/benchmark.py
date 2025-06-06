@@ -10,11 +10,11 @@ from Postgres.database_config import DatabaseConfig
 from Postgres.main_postgres import db_connection, close_connection, create_db, table_exists, create_table, control_popolate, popolate_table, index_exists, create_indexes
 from Postgres.search_engine import SearchEngine
 # Librerie per realizzzare i grafici
-import matplotlib.pyplot as plt
-import seaborn as sns
+#import matplotlib.pyplot as plt
+#import seaborn as sns
 
 def estrai_json():
-    with open("Query per golden list.json", 'r') as file:
+    with open("Benchmark/Query per golden list.json", 'r') as file:
         dati = json.load(file)
     lista_valori = list(dati.values())
     return lista_valori
@@ -36,10 +36,14 @@ def benchmark_postgres():
     results = list()
     print ("Inizio benchmark per Postgres...\n")
     for q in QUERY_LIST:
-        if q == "":
-            results.append(motorone.tfidf_search())
-        else:
-            results.append(motorone.tfidf_search(q))
+        tmp = motorone.tfidf_search(q)
+        nuova_lista = list()
+        for i in range(len(tmp)):
+            nuova_lista.append(tmp[i][0])
+        results.append(nuova_lista)
+    for i in results:
+        print(i)
+        
     return results
 
 def benchmark_pylucene():
@@ -90,7 +94,7 @@ def main():
             #recall_at_k(bench_whoosh, 5)
         ],
         "F1@5": [
-            f1_at_k(data["Precision@5"][0], data["Recall@5"][0]),
+            #f1_at_k(data["Precision@5"][0], data["Recall@5"][0]),
             #f1_at_k(data["Precision@5"][1], data["Recall@5"][1]),
             #f1_at_k(data["Precision@5"][2], data["Recall@5"][2])
         ],
@@ -103,9 +107,9 @@ def main():
     }
 
     #Stampa di questi risultati
-    df = pd.DataFrame(data) # Grazie al DataFrame possiamo visualizzare i risultati in modo tabellare
-    print("\nRisultati del benchmark:")
-    print(df)
+    #df = pd.DataFrame(data) # Grazie al DataFrame possiamo visualizzare i risultati in modo tabellare
+    #print("\nRisultati del benchmark:")
+    #print(df)
 
 if __name__ == "__main__":
     main()
