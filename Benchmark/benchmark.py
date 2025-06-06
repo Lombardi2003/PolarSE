@@ -13,12 +13,7 @@ from Postgres.search_engine import SearchEngine
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
-
-
-
-
-
+from Pylucene.pylucene_IR import PyLuceneIR
 
 from Whoosh.IRmodel import IRModel
 import yaml
@@ -99,6 +94,10 @@ def benchmark_whoosh():
 
         # Aggiungi la lista degli ID alla lista di liste dei risultati
         results.append(id_list)
+    
+    print("\nLISTA DI LISTE DI ID (Whoosh):")
+    for i, query_results in enumerate(results, start=1):
+        print(f"Query {i}: {query_results}")
 
     return results
 
