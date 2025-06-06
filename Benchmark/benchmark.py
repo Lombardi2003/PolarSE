@@ -10,19 +10,19 @@ from Postgres.database_config import DatabaseConfig
 from Postgres.main_postgres import db_connection, close_connection, create_db, table_exists, create_table, control_popolate, popolate_table, index_exists, create_indexes
 from Postgres.search_engine import SearchEngine
 # Librerie per realizzzare i grafici
-<<<<<<< HEAD
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+
+
+
+
+
+
+
 from Whoosh.IRmodel import IRModel
 import yaml
 from whoosh.scoring import BM25F
-=======
-#import matplotlib.pyplot as plt
-#import seaborn as sns
-
-# Motore in Pylucene
-from Pylucene.pylucene_IR import PyLuceneIR
->>>>>>> 8e9926a9c00b26a5dc91268e9d383e24680c5c05
 
 def estrai_json():
     with open("Benchmark/Query per golden list.json", 'r') as file:
