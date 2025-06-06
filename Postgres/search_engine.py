@@ -9,9 +9,12 @@ class SearchEngine:
         self.limit = limit
 
     @staticmethod
-    def parse_query_input():
+    def parse_query_input(control=None):
         operator = None
-        text = input("Inserisci la query ([campo:valore] oppure più campi separati da un operatore booleano): ")
+        if control is None:
+            text = input("Inserisci la query ([campo:valore] oppure più campi separati da un operatore booleano): ")
+        else:
+            text = control
         if 'AND' in text or 'OR' in text:
             pairs, operator = SearchEngine.get_pairs(text)
         else:
@@ -55,8 +58,8 @@ class SearchEngine:
                 operator.append("OR")
         return criteria, operator
 
-    def search_auto(self, ranking_method='tfidf'):
-        criteria, operator = SearchEngine.parse_query_input()
+    def search_auto(self, ranking_method='tfidf', search_value=None):
+        criteria, operator = SearchEngine.parse_query_input(search_value)
         if not criteria:
             print("Nessuna query valida inserita.")
             return []
@@ -152,8 +155,8 @@ class SearchEngine:
                 """
         return query
 
-    def tfidf_search(self):
-        return self.search_auto(ranking_method='tfidf')
+    def tfidf_search(self, search_value=None):
+        return self.search_auto(ranking_method='tfidf',search_value=search_value)
 
     def bm25_search(self):
         return self.search_auto(ranking_method='bm25')

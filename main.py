@@ -67,17 +67,17 @@ def setup():
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Postgres...")
-    #Postgres.main_postgres.setup_postgres()  # Chiama la funzione setup_postgres del modulo Postgres
+    Postgres.main_postgres.setup_postgres()  # Chiama la funzione setup_postgres del modulo Postgres
     print("Postgres è stato setuppato correttamente!")
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Pylucene...")
-    #PyLuceneIR.create_index()  # Chiama la funzione create_index del modulo Pylucene
+    PyLuceneIR.create_index()  # Chiama la funzione create_index del modulo Pylucene
     print("\nPylucene è stato setuppato correttamente!")
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Whoosh...")
-    #i = Whoosh.index.main_whoosh_setup()  # Chiama la funzione main del modulo Whoosh
+    i = Whoosh.index.main_whoosh_setup()  # Chiama la funzione main del modulo Whoosh
     print("\nWhoosh è stato setuppato correttamente!")
     time.sleep(2)  # Attendi 3 secondi
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -91,7 +91,7 @@ def main():
     nltk.download('punkt_tab')  # Scarica il pacchetto NLTK per il tokenizzatore
     os.system('cls' if os.name == 'nt' else 'clear')
     download_dataset()
-    #setup()
+    setup()
     os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
     print("BENVENUTO NEL PROGRAMMA DI GESTIONE DEL DATASET PER FILM E SERIE TV!")
     while True:

@@ -13,7 +13,7 @@ import os
 from re import sub
 
 # DB connection
-def db_connection(config, retry=True):
+def db_connection(config, retry=True, retry2=True):
     for i in range(config.RECONNECT_ATTEMPTS):
         if retry:
             print(f"Tentativo di connessione al database {i+1}/{config.RECONNECT_ATTEMPTS}...")
@@ -25,10 +25,12 @@ def db_connection(config, retry=True):
                 host=config.IP_ADDRESS,
                 port=config.PORT_NUMBER
             )
-            print("Connessione al database stabilita con successo.\n")
-            time.sleep(3)  # Attendi 1 secondo
-            os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
-            print("Connessione al database stabilita con successo.\n")
+            if retry2:
+                print("Connessione al database stabilita con successo.\n")
+                time.sleep(3)  # Attendi 1 secondo
+                os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
+            if retry2:
+                print("Connessione al database stabilita con successo.\n")
             return conn  # Connessione riuscita, restituisce connessione
         except Exception as e:
             print(f"Errore di connessione: {e}")
@@ -76,17 +78,16 @@ def main_postgres():
     while True:
         print("\nScegli il ranking da utilizzare per la ricerca:")
         scelta=input("1: TF-IDF (basato su ts_rank, metodo di default per Postgres); \n2: BM25 (basato su ts_rank_cd); \n3: Torna al menù scelta del Search Engine; \nSCELTA: ")
-        try:
-            if scelta == '1':
-                result = ricerca.tfidf_search()
-            elif scelta == '2':
-                result = ricerca.bm25_search()
-            elif scelta == '3':
-                os.system('cls' if os.name == 'nt' else 'clear')
-                # Close the connection
-                close_connection(conn)
-                return 0
-        except Exception:
+        if scelta == '1':
+            result = ricerca.tfidf_search()
+        elif scelta == '2':
+            result = ricerca.bm25_search()
+        elif scelta == '3':
+            os.system('cls' if os.name == 'nt' else 'clear')
+            # Close the connection
+            close_connection(conn)
+            return 0
+        else:
             print("Scelta non valida.")
             continue
 
