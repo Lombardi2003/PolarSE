@@ -98,15 +98,15 @@ def main_postgres():
         titolo = "📌 \033[1mSearch Results:\033[0m"
         print(titolo.center(terminal_width))
         for r in result:
-            print(f"🎬 \033[1m{r[0]}\033[0m (\033[1;32m{r[1] if r[1] != -1 else 'Year not available'}\033[0m)")
-            print(f"📽️  \033[1mType:\033[0m \033[1;35m{r[4]}\033[0m")
-            print(f"⭐ \033[1mAverage Rating:\033[0m \033[1;38;5;229m{r[5]}\033[0m")
-            print(f"🎭 \033[1mGenre:\033[0m \033[38;5;208m{r[2] if r[2] else 'N/A'}\033[0m")
-            print(f"\n📝 \033[1mDescription:\033[0m\n   {r[3]}")
+            print(f"🎬 \033[1m{r[1]}\033[0m (\033[1;32m{r[2] if r[2] != -1 else 'Year not available'}\033[0m)")
+            print(f"📽️ \033[1mType:\033[0m \033[1;35m{r[5]}\033[0m")
+            print(f"⭐ \033[1mAverage Rating:\033[0m \033[1;38;5;229m{r[6]}\033[0m")
+            print(f"🎭 \033[1mGenre:\033[0m \033[38;5;208m{r[3] if r[3] else 'N/A'}\033[0m")
+            print(f"\n📝 \033[1mDescription:\033[0m\n   {r[4]}")
 
-            # Campi headline: partono da r[6] in poi
+            # Campi headline: partono da r[7] in poi
             found_snippet = False
-            for i in range(6, len(r)):
+            for i in range(7, len(r)):
                 snippet = r[i]
                 if not snippet or not isinstance(snippet, str):
                     continue
