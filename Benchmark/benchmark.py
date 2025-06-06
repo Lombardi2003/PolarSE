@@ -13,6 +13,9 @@ from Postgres.search_engine import SearchEngine
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# Motore in Pylucene
+from Pylucene.pylucene_IR import PyLuceneIR
+
 def estrai_json():
     with open("Query per golden list.json", 'r') as file:
         dati = json.load(file)
@@ -43,7 +46,17 @@ def benchmark_postgres():
     return results
 
 def benchmark_pylucene():
-    pass
+    results_all = []
+    for q in QUERY_LIST:
+        if not q.strip():
+            # Se la query è vuota, append una lista vuota
+            results_all.append([])
+        else:
+            hits = PyLuceneIR.search_index(q, max_results=10, ranking_method="1")
+            # Estraggo solamente l'intero "id" da ogni risultato, a fini di benchmarking
+            ids = [doc["id"] for doc in hits]
+            results_all.append(ids)
+    return results_all    
 
 def benchmark_whoosh():
     pass
