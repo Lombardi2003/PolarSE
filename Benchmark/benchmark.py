@@ -13,12 +13,7 @@ from Postgres.search_engine import SearchEngine
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
-
-
-
-
-
+from Pylucene.pylucene_IR import PyLuceneIR
 
 from Whoosh.IRmodel import IRModel
 import yaml
