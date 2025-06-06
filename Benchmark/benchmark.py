@@ -3,6 +3,7 @@ import sys
 import time
 import pandas as pd
 import json
+import json
 #Librerie per Postgres
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from Postgres.database_config import DatabaseConfig
@@ -12,13 +13,13 @@ from Postgres.search_engine import SearchEngine
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-QUERY_LIST = [
-    "twilight",
-    "harry potter",
-    "genres:adventure AND release_year:2020",
-    "",
-    ""
-]
+def estrai_json():
+    with open(os.path.dirname(".")+"Query per golden list.json", 'r') as file:
+        dati = json.load(file)
+    lista_valori = list(dati.values())
+    return lista_valori
+
+QUERY_LIST = estrai_json()
 
 GOLDEN_RESULTS = [
     [],
