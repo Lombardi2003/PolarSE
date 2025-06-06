@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 def estrai_json():
-    with open(os.path.dirname(".")+"Query per golden list.json", 'r') as file:
+    with open("Query per golden list.json", 'r') as file:
         dati = json.load(file)
     lista_valori = list(dati.values())
     return lista_valori
