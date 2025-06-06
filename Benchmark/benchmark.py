@@ -48,10 +48,64 @@ def benchmark_pylucene():
 def benchmark_whoosh():
     pass
 
+# Creazione di tutte le formule per il confronto delle prestazioni
+
+# Precision@5
+def precision_at_k(results, k):
+    return sum(1 for result in results if result in GOLDEN_RESULTS) / k
+# Recall@5
+def recall_at_k(results, k):
+    return sum(1 for result in results if result in GOLDEN_RESULTS) / len(GOLDEN_RESULTS)  
+# F1@5
+def f1_at_k(precision, recall):
+    if precision + recall == 0:
+        return 0
+    return 2 * (precision * recall) / (precision + recall)
+# Average Precision
+def average_precision(results):
+    total_precision = 0
+    for i, result in enumerate(results):
+        if result in GOLDEN_RESULTS:
+            total_precision += precision_at_k(results[:i + 1], i + 1)
+    return total_precision / len(GOLDEN_RESULTS) if len(GOLDEN_RESULTS) > 0 else 0
+# Mean Average Precision
+def mean_average_precision(results_list):
+    return sum(average_precision(results) for results in results_list) / len(results_list)
+
 def main():
     bench_postgres = benchmark_postgres()       # Lista dei risultati per Postgres
     bench_pylucene = benchmark_pylucene()       # Lista dei risultati per Pylucene
     bench_whoosh = benchmark_whoosh()           # Lista dei risultati per Whoosh
+    # Creazione del DataFrame per i risultati
+    data = {
+        "Engine": ["Postgres", "Pylucene", "Whoosh"],
+        "Precision@5": [
+            precision_at_k(bench_postgres, 5),
+            #precision_at_k(bench_pylucene, 5),
+            #precision_at_k(bench_whoosh, 5)
+        ],
+        "Recall@5": [
+            recall_at_k(bench_postgres, 5),
+            #recall_at_k(bench_pylucene, 5),
+            #recall_at_k(bench_whoosh, 5)
+        ],
+        "F1@5": [
+            f1_at_k(data["Precision@5"][0], data["Recall@5"][0]),
+            #f1_at_k(data["Precision@5"][1], data["Recall@5"][1]),
+            #f1_at_k(data["Precision@5"][2], data["Recall@5"][2])
+        ],
+        "Average Precision": [
+            average_precision(bench_postgres),
+            #average_precision(bench_pylucene),
+            #average_precision(bench_whoosh)
+        ],
+        "Mean Average Precision": mean_average_precision([bench_postgres])
+    }
+
+    #Stampa di questi risultati
+    df = pd.DataFrame(data) # Grazie al DataFrame possiamo visualizzare i risultati in modo tabellare
+    print("\nRisultati del benchmark:")
+    print(df)
 
 if __name__ == "__main__":
     main()
