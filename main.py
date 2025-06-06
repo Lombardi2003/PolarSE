@@ -116,7 +116,7 @@ def main():
             else:
                 search[choice-1]()
         except Exception:
-            print("\n\033[91mOPS! LA TUA SCELTA NON SEMBRA CORRETTA...\033[0m\n")
+            print("\n\033[91mOPS! LA TUA SCELTA NON SEMBRA CORRETTA.\033[0m\n")
 
 # Inizio programma
 if __name__ == '__main__':

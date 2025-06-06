@@ -96,10 +96,8 @@ class PyLuceneIR:
 
                 doc = Document()
 
-                # Aggiungo il campo "id" come intero, per benchmarking
-                id = data.get("id", None)
-                doc.add(IntPoint("id", int(data["id"])))
-                doc.add(StoredField("id", int(data["id"])))
+                id = data.get("id")
+                doc.add(StringField("id", id, Field.Store.YES))
 
                 title = data.get("title", "Senza titolo")
                 
@@ -366,40 +364,47 @@ class PyLuceneIR:
 
     @staticmethod
     def search_index(query_str, max_results=10, ranking_method="1"):
-        PyLuceneIR.init_lucene()
-        index_dir = FSDirectory.open(Paths.get(PyLuceneIR.MAIN_INDEX))
-        reader = DirectoryReader.open(index_dir)
-        searcher = IndexSearcher(reader)
-        analyzer = StandardAnalyzer()
+        try:
+            PyLuceneIR.init_lucene()
+            index_dir = FSDirectory.open(Paths.get(PyLuceneIR.MAIN_INDEX))
+            reader = DirectoryReader.open(index_dir)
+            searcher = IndexSearcher(reader)
+            analyzer = StandardAnalyzer()
 
-        query = PyLuceneIR.build_query(query_str, analyzer)
-        if ranking_method == "2":
-            searcher.setSimilarity(ClassicSimilarity())
-        else:
-            searcher.setSimilarity(BM25Similarity())
-        hits = searcher.search(query, max_results).scoreDocs
-        results = []
+            query = PyLuceneIR.build_query(query_str, analyzer)
+            if ranking_method == "2":
+                searcher.setSimilarity(ClassicSimilarity())
+            else:
+                searcher.setSimilarity(BM25Similarity())
+            hits = searcher.search(query, max_results).scoreDocs
+            results = []
 
-        for hit in hits:
-            doc = searcher.storedFields().document(hit.doc)
+            for hit in hits:
+                doc = searcher.storedFields().document(hit.doc)
 
-            # Recupero l'ID come intero nelle StoredField
-            java_int = doc.getField("id").numericValue()
-            docid = int(java_int)
+                try:
+                    # Recupero l'ID come intero nelle StoredField
+                    docid = int(doc.get("id"))
+                except Exception as e:
+                    print(f"\n\033[91mErrore nel recupero dell'ID: {e}\033[0m")
+                    continue
+            
+                results.append({
+                    "id": docid,
+                    "title": doc.get("title"),
+                    "description": doc.get("description"),
+                    "release_year": doc.get("release_year"),
+                    "average_rating": doc.get("average_rating"),
+                    "type": doc.get("type"),
+                    "genres": doc.get("genres"),
+                    "score": hit.score
+                })
 
-            results.append({
-                "id": docid,
-                "title": doc.get("title"),
-                "description": doc.get("description"),
-                "release_year": doc.get("release_year"),
-                "average_rating": doc.get("average_rating"),
-                "type": doc.get("type"),
-                "genres": doc.get("genres"),
-                "score": hit.score
-            })
-
-        reader.close()
-        return results
+            reader.close()
+            return results
+        except Exception as e:
+            print(f"\n\033[91mErrore durante la ricerca: {e}\033[0m")
+            return []
 
 
     def main_pylucene():

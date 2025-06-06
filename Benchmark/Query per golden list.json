@@ -1,7 +1,7 @@
 {
     "Q1": "twilight",
     "Q2": "harry potter",
-    "Q3": "genres:adventure AND release_year:2020",
-    "Q4": "",
-    "Q5": ""
+    "Q3": "title:inception OR description:space",
+    "Q4": "type:tv AND genres:fantasy OR average_rating:8",
+    "Q5": "genres:adventure AND release_year:2020"
 }

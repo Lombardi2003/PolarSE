@@ -10,8 +10,8 @@ from Postgres.database_config import DatabaseConfig
 from Postgres.main_postgres import db_connection, close_connection, create_db, table_exists, create_table, control_popolate, popolate_table, index_exists, create_indexes
 from Postgres.search_engine import SearchEngine
 # Librerie per realizzzare i grafici
-import matplotlib.pyplot as plt
-import seaborn as sns
+#import matplotlib.pyplot as plt
+#import seaborn as sns
 
 from Pylucene.pylucene_IR import PyLuceneIR
 
@@ -53,17 +53,22 @@ def benchmark_postgres():
     return results
 
 def benchmark_pylucene():
+    print("Inizio benchmark per Pylucene...\n")
     results_all = []
     for q in QUERY_LIST:
         if not q.strip():
-            # Se la query è vuota, append una lista vuota
             results_all.append([])
         else:
             hits = PyLuceneIR.search_index(q, max_results=10, ranking_method="1")
-            # Estraggo solamente l'intero "id" da ogni risultato, a fini di benchmarking
+            # Stampo a video quanti hit ho trovato (solo per debug):
+            print(f"CIAO, SONO UN MESSAGGIO DI DEBUG: per query '{q}' ho ottenuto {len(hits)} hit da PyLucene.")
+
             ids = [doc["id"] for doc in hits]
             results_all.append(ids)
-    return results_all    
+    
+    print("\nLISTA DI ID DEI RISULTATI (Pylucene):")
+    for idx, id_list in enumerate(results_all, start=1):
+        print(f"Query {idx}: {id_list}")    
 
 def benchmark_whoosh():
     
