@@ -1,4 +1,5 @@
 import psycopg2
+import time
 
 columns = ["title", "description", "genres", "type", "release_year", "average_rating"]
 
@@ -59,24 +60,29 @@ class SearchEngine:
         return criteria, operator
 
     def search_auto(self, ranking_method='tfidf', search_value=None):
-        criteria, operator = SearchEngine.parse_query_input(search_value)
-        if not criteria:
-            print("Nessuna query valida inserita.")
-            return []
-        if len(criteria) == 1:
-            field, value, o = criteria.pop() # Prende il primo elemento del dizionario
-            if field in ["release_year", "average_rating"]:
-                return self.execute_simple_query(field, value, o)
+        try:
+            criteria, operator = SearchEngine.parse_query_input(search_value)
+            if not criteria:
+                print("Nessuna query valida inserita.")
+                return []
+            if len(criteria) == 1:
+                field, value, o = criteria.pop() # Prende il primo elemento del dizionario
+                if field in ["release_year", "average_rating"]:
+                    return self.execute_simple_query(field, value, o)
+                else:
+                    if ranking_method == 'bm25':
+                        return self.execute_bm25_rank(field, value, o)
+                    else:
+                        return self.execute_ts_rank(field, value, o)
             else:
                 if ranking_method == 'bm25':
-                    return self.execute_bm25_rank(field, value, o)
+                    return self.execute_complex_query(operator, criteria, 'bm25')
                 else:
-                    return self.execute_ts_rank(field, value, o)
-        else:
-            if ranking_method == 'bm25':
-                return self.execute_complex_query(operator, criteria, 'bm25')
-            else:
-                return self.execute_complex_query(operator, criteria)
+                    return self.execute_complex_query(operator, criteria)
+        except Exception as e:
+            print(f"Errore durante l'esecuzione della query: assicurati di inserire una query valida. {e}")
+            time.sleep(3)  # Attendi 2 secondi prima di riprovare
+            return []
 
     def execute_simple_query(self, field, value, operation):
         cur = self.conn.cursor()
