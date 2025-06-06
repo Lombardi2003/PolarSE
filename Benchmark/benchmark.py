@@ -12,6 +12,9 @@ from Postgres.search_engine import SearchEngine
 # Librerie per realizzzare i grafici
 import matplotlib.pyplot as plt
 import seaborn as sns
+from Whoosh.IRmodel import IRModel
+import yaml
+from whoosh.scoring import BM25F
 
 def estrai_json():
     with open("Query per golden list.json", 'r') as file:
@@ -46,7 +49,37 @@ def benchmark_pylucene():
     pass
 
 def benchmark_whoosh():
-    pass
+    
+    # Inizializza il motore Whoosh
+    with open('Whoosh/config.yaml', 'r') as file:
+        config_data = yaml.safe_load(file)
+    index_dir = f"{config_data['INDEX']['MAINDIR']}/{config_data['INDEX']['ACCDIR']}"
+
+    # Scegli il modello di ranking (BM25F per coerenza con Postgres tfidf_search)
+    ranking_model = BM25F
+
+    # Crea il motore Whoosh
+    whoosh_engine = IRModel(index_dir, weightingModel=ranking_model)
+    print("Inizio benchmark per Whoosh...\n")
+
+    # Lista di liste per i risultati
+    results = []
+
+    # Per ogni query nella QUERY_LIST
+    for q in QUERY_LIST:
+        if q == "":
+            search_results = whoosh_engine.search("", fuzzy=False)
+        else:
+            search_results = whoosh_engine.search(q, fuzzy=False)
+
+        # Estrai SOLO gli ID dei risultati e mettili in una lista
+        id_list = list(search_results.keys())
+
+        # Aggiungi la lista degli ID alla lista di liste dei risultati
+        results.append(id_list)
+
+    return results
+
 
 # Creazione di tutte le formule per il confronto delle prestazioni
 
