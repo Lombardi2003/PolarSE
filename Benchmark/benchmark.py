@@ -110,56 +110,119 @@ def benchmark_whoosh():
 # Creazione di tutte le formule per il confronto delle prestazioni
 
 # Precision@5
-def precision_at_k(results, k):
-    return sum(1 for result in results if result in GOLDEN_RESULTS) / k
+def precision_at_k(results, golden, k):
+    retrieved_k = results[:k]
+    relevant_retrieved = [r for r in retrieved_k if r in golden]
+    return len(relevant_retrieved) / k  
+
 # Recall@5
-def recall_at_k(results, k):
-    return sum(1 for result in results if result in GOLDEN_RESULTS) / len(GOLDEN_RESULTS)  
+def recall_at_k(results, golden, k):
+    retrieved_k = results[:k]
+    relevant_retrieved = [r for r in retrieved_k if r in golden]
+    return len(relevant_retrieved) / len(golden) if golden else 0
+
+
 # F1@5
 def f1_at_k(precision, recall):
     if precision + recall == 0:
         return 0
     return 2 * (precision * recall) / (precision + recall)
+
 # Average Precision
-def average_precision(results):
+def average_precision(results, golden):
+    if not golden:
+        return 0
+    
     total_precision = 0
-    for i, result in enumerate(results):
-        if result in GOLDEN_RESULTS:
-            total_precision += precision_at_k(results[:i + 1], i + 1)
-    return total_precision / len(GOLDEN_RESULTS) if len(GOLDEN_RESULTS) > 0 else 0
+    num_relevant = 0
+
+    for i, r in enumerate(results):
+        if r in golden:
+            num_relevant += 1
+            precision_at_i = num_relevant / (i + 1)
+            total_precision += precision_at_i
+
+    return total_precision / len(golden)
+
 # Mean Average Precision
-def mean_average_precision(results_list):
-    return sum(average_precision(results) for results in results_list) / len(results_list)
+def mean_average_precision(results_list, golden_list):
+    assert len(results_list) == len(golden_list)
+    ap_list = []
+    for results, golden in zip(results_list, golden_list):
+        ap = average_precision(results, golden)
+        ap_list.append(ap)
+    return sum(ap_list) / len(ap_list) if ap_list else 0
+
 
 def main():
-    bench_postgres = benchmark_postgres()       # Lista dei risultati per Postgres
-    bench_pylucene = benchmark_pylucene()       # Lista dei risultati per Pylucene
-    bench_whoosh = benchmark_whoosh()           # Lista dei risultati per Whoosh
-    # Creazione del DataFrame per i risultati
-    data = {
-        "Engine": ["Postgres", "Pylucene", "Whoosh"],
-        "Precision@5": [
-            precision_at_k(bench_postgres, 5),
-            #precision_at_k(bench_pylucene, 5),
-            #precision_at_k(bench_whoosh, 5)
-        ],
-        "Recall@5": [
-            recall_at_k(bench_postgres, 5),
-            #recall_at_k(bench_pylucene, 5),
-            #recall_at_k(bench_whoosh, 5)
-        ],
-        "F1@5": [
-            #f1_at_k(data["Precision@5"][0], data["Recall@5"][0]),
-            #f1_at_k(data["Precision@5"][1], data["Recall@5"][1]),
-            #f1_at_k(data["Precision@5"][2], data["Recall@5"][2])
-        ],
-        "Average Precision": [
-            average_precision(bench_postgres),
-            #average_precision(bench_pylucene),
-            #average_precision(bench_whoosh)
-        ],
-        "Mean Average Precision": mean_average_precision([bench_postgres])
-    }
+    # Eseguiamo i benchmark dei motori:
+    bench_postgres = benchmark_postgres()
+    #bench_pylucene = benchmark_pylucene()
+    bench_whoosh = benchmark_whoosh()
+
+    # === POSTGRES ===
+    precisions_postgres = []
+    recalls_postgres = []
+    f1s_postgres = []
+    aps_postgres = []
+
+    for i in range(len(GOLDEN_RESULTS)):
+        p = precision_at_k(bench_postgres[i], GOLDEN_RESULTS[i], k=5)
+        r = recall_at_k(bench_postgres[i], GOLDEN_RESULTS[i], k=5)
+        f1 = f1_at_k(p, r)
+        ap = average_precision(bench_postgres[i], GOLDEN_RESULTS[i])
+
+        precisions_postgres.append(p)
+        recalls_postgres.append(r)
+        f1s_postgres.append(f1)
+        aps_postgres.append(ap)
+
+    # Calcoliamo i valori finali per Postgres:
+    precision_postgres_final = sum(precisions_postgres) / len(precisions_postgres)
+    recall_postgres_final = sum(recalls_postgres) / len(recalls_postgres)
+    f1_postgres_final = sum(f1s_postgres) / len(f1s_postgres)
+    ap_postgres_final = sum(aps_postgres) / len(aps_postgres)
+    map_postgres_final = mean_average_precision(bench_postgres, GOLDEN_RESULTS)
+
+    # STAMPA risultati per Postgres:
+    print("\n== POSTGRES RESULTS ==")
+    print(f"Precision@5: {precision_postgres_final:.3f}")
+    print(f"Recall@5: {recall_postgres_final:.3f}")
+    print(f"F1@5: {f1_postgres_final:.3f}")
+    print(f"Average Precision: {ap_postgres_final:.3f}")
+    print(f"Mean Average Precision: {map_postgres_final:.3f}")
+
+    # === WHOOSH === (puoi fare LO STESSO ciclo per Whoosh!)
+    precisions_whoosh = []
+    recalls_whoosh = []
+    f1s_whoosh = []
+    aps_whoosh = []
+
+    for i in range(len(GOLDEN_RESULTS)):
+        p = precision_at_k(bench_whoosh[i], GOLDEN_RESULTS[i], k=5)
+        r = recall_at_k(bench_whoosh[i], GOLDEN_RESULTS[i], k=5)
+        f1 = f1_at_k(p, r)
+        ap = average_precision(bench_whoosh[i], GOLDEN_RESULTS[i])
+
+        precisions_whoosh.append(p)
+        recalls_whoosh.append(r)
+        f1s_whoosh.append(f1)
+        aps_whoosh.append(ap)
+
+    # Calcoliamo i valori finali per Whoosh:
+    precision_whoosh_final = sum(precisions_whoosh) / len(precisions_whoosh)
+    recall_whoosh_final = sum(recalls_whoosh) / len(recalls_whoosh)
+    f1_whoosh_final = sum(f1s_whoosh) / len(f1s_whoosh)
+    ap_whoosh_final = sum(aps_whoosh) / len(aps_whoosh)
+    map_whoosh_final = mean_average_precision(bench_whoosh, GOLDEN_RESULTS)
+
+    # STAMPA risultati per Whoosh:
+    print("\n== WHOOSH RESULTS ==")
+    print(f"Precision@5: {precision_whoosh_final:.3f}")
+    print(f"Recall@5: {recall_whoosh_final:.3f}")
+    print(f"F1@5: {f1_whoosh_final:.3f}")
+    print(f"Average Precision: {ap_whoosh_final:.3f}")
+    print(f"Mean Average Precision: {map_whoosh_final:.3f}")
 
     #Stampa di questi risultati
     #df = pd.DataFrame(data) # Grazie al DataFrame possiamo visualizzare i risultati in modo tabellare
