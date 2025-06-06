@@ -98,7 +98,7 @@ class SearchEngine:
             if 'TO' in search_value:
                 val = search_value.split(" TO ")
                 query = f"""
-                SELECT title, release_year, genres, description, type, average_rating
+                SELECT id, title, release_year, genres, description, type, average_rating
                 FROM dataset
                 WHERE {field} BETWEEN {int(val[0][1:])} AND {int(val[1][:-1])}
                 ORDER BY {field} DESC
@@ -106,7 +106,7 @@ class SearchEngine:
                 """
             else:
                 query = f"""
-                SELECT title, release_year, genres, description, type, average_rating
+                SELECT id, title, release_year, genres, description, type, average_rating
                 FROM dataset
                 WHERE {field} {operation} %s
                 ORDER BY {field} DESC
@@ -116,7 +116,7 @@ class SearchEngine:
             if 'TO' in search_value:
                 val = search_value.split(" TO ")
                 query = f"""
-                SELECT title, release_year, genres, description, type, average_rating
+                SELECT id, title, release_year, genres, description, type, average_rating
                 FROM dataset
                 WHERE ROUND({field}::numeric,1) BETWEEN {float(val[0][1:])} AND {float(val[1][:-1])}
                 ORDER BY {field} DESC
@@ -124,7 +124,7 @@ class SearchEngine:
                 """
             else:        
                 query = f"""
-                SELECT title, release_year, genres, description, type, average_rating
+                SELECT id, title, release_year, genres, description, type, average_rating
                 FROM dataset
                 WHERE ROUND({field}::numeric,1) {operation} %s
                 ORDER BY {field} DESC
@@ -135,7 +135,7 @@ class SearchEngine:
             ts_query = "plainto_tsquery('english', %s)"  # Cambia to_tsquery con plainto_tsquery
             if ranking_method == 'bm25':
                 query = f"""
-                SELECT title, release_year, genres, description, type, average_rating,
+                SELECT id, title, release_year, genres, description, type, average_rating,
                        ts_rank_cd({ts_vector}, {ts_query}) AS rank
                        ts_headline('english', {field}, {ts_query}) AS headline
                 FROM dataset
@@ -145,7 +145,7 @@ class SearchEngine:
                 """
             else:
                 query = f"""
-                SELECT title, release_year, genres, description, type, average_rating,
+                SELECT id title, release_year, genres, description, type, average_rating,
                        ts_rank({ts_vector}, {ts_query}) AS rank,
                        ts_headline('english', {field}, {ts_query}) AS headline
                 FROM dataset
@@ -209,7 +209,7 @@ class SearchEngine:
             app = list()
             headline_parts = []
             query = f"""
-            SELECT title, release_year, genres, description, type, average_rating,"""
+            SELECT id, title, release_year, genres, description, type, average_rating,"""
             ts_vector = ""
             for field, value, o in criteria:
                 if field == "release_year" or field == "average_rating":
@@ -282,7 +282,7 @@ class SearchEngine:
             app = list()
             headline_parts = []
             query = f"""
-            SELECT title, release_year, genres, description, type, average_rating,"""
+            SELECT id, title, release_year, genres, description, type, average_rating,"""
             ts_vector = ""
             for field, value, o in criteria:
                 if field == "release_year" or field == "average_rating":
