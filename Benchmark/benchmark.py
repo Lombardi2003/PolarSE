@@ -13,6 +13,9 @@ from Postgres.search_engine import SearchEngine
 #import matplotlib.pyplot as plt
 #import seaborn as sns
 
+
+
+
 # Motore in Pylucene
 from Pylucene.pylucene_IR import PyLuceneIR
 
