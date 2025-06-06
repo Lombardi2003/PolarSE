@@ -95,6 +95,12 @@ class PyLuceneIR:
                     continue
 
                 doc = Document()
+
+                # Aggiungo il campo "id" come intero, per benchmarking
+                id = data.get("id", None)
+                doc.add(IntPoint("id", int(data["id"])))
+                doc.add(StoredField("id", int(data["id"])))
+
                 title = data.get("title", "Senza titolo")
                 
                 # Costruzione documento
@@ -376,7 +382,13 @@ class PyLuceneIR:
 
         for hit in hits:
             doc = searcher.storedFields().document(hit.doc)
+
+            # Recupero l'ID come intero nelle StoredField
+            java_int = doc.getField("id").numericValue()
+            docid = int(java_int)
+
             results.append({
+                "id": docid,
                 "title": doc.get("title"),
                 "description": doc.get("description"),
                 "release_year": doc.get("release_year"),
