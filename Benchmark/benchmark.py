@@ -4,6 +4,7 @@ import sys
 import time
 import pandas as pd
 import json
+from tabulate import tabulate
 
 # librerie per Postgres
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -65,16 +66,14 @@ def benchmark_pylucene():
             results_all.append([])
         else:
             hits = PyLuceneIR.search_index(q, max_results=10, ranking_method="1")
-            # Stampo a video quanti hit ho trovato (solo per debug):
-            print(f"CIAO, SONO UN MESSAGGIO DI DEBUG: per query '{q}' ho ottenuto {len(hits)} hit da PyLucene.")
-
+    
             ids = [doc["id"] for doc in hits]
             results_all.append(ids)  
     
     return results_all
 
 def benchmark_whoosh():
-    
+
     # inizializzo il motore whoosh
     with open('Whoosh/config.yaml', 'r') as file:
         config_data = yaml.safe_load(file)
@@ -203,8 +202,18 @@ def plot_metrics(precision_postgres_final, recall_postgres_final, f1_postgres_fi
         'Mean Average Precision': [map_postgres_final, map_whoosh_final, map_pylucene_final]
     })
 
-    print("\n=== DATAFRAME DELLE METRICHE ===")
-    print(df)
+    # TABELLA
+    table = df.values.tolist()
+    headers = df.columns.tolist()
+    fig, ax = plt.subplots(figsize=(10, 2))
+    ax.axis('off')
+    table = ax.table(cellText=df.values, colLabels=df.columns, cellLoc='center', loc='center')
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1, 1.5)
+    plt.tight_layout()
+    plt.savefig(os.path.join(graphics_dir, 'tabella_metriche.png'))
+    plt.close()
 
     # GRAFICO GENERALE (confronto generico)
     df_plot = df.set_index('Engine').T
