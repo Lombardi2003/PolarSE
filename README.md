@@ -1,4 +1,4 @@
-# **🎬 Motore di Ricerca di Film e Serie TV**
+# **🎬 PolarSE**
 
 Benvenuto nel progetto di ricerca di film e serie TV, sviluppato come parte del corso di **Gestione dell'Informazione (Information Retrieval)** per l'anno accademico 2024/2025! 
 
@@ -27,13 +27,18 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 
 - **📊 2 Metodi di Ranking per Ogni Motore**:
   - **Default Ranking**:
-     - Il metodo di ranking predefinito del sistema, che applica algoritmi come **BM25** per **PyLucene** e **Whoosh**, ottimizzando la rilevanza dei risultati.
-  - **dARR (Dumb Average Rating Ranking)**:
-     - Un metodo personalizzato che ordina i risultati in base alla **valutazione media** (`average_rating`) degli utenti di TMDb, offrendo una classifica dei film/serie più apprezzati.
+     - PyLucene e Whoosh utilizzano l'algoritmo BM25, uno dei metodi più efficaci per la rilevanza dei risultati nella ricerca testuale.
+     - Postgres impiega un'emulazione di TF-IDF, un metodo basato sulla frequenza dei termini rispetto alla loro unicità nel corpus
+
+  - **Alternate Ranking**:
+     - Postgres utilizza BM25, ma in maniera inversa, basandosi sul ranking degli utenti di TMDb (average_rating), quindi favorendo i contenuti più apprezzati.
+     - PyLucene e Whoosh, invece, adottano TF-IDF nel ranking alternativo, garantendo un criterio differente di classificazione rispetto al ranking predefinito.
 
 ---
 
 ## 📦 **Configurazioni**:
+All'interno del progetto è stato creato un file `requirements.txt`, che permette di scaricare in maniera automatizzata tutte le librerie e le dipendenze necessarie per il corretto funzionamento del programma
+```pip install -r requirements.txt```
 ### **PostgresSQL**
 ### **Whoosh**
 ### **Pylucene**
@@ -60,13 +65,6 @@ All'avvio, il programma esegue i seguenti passaggi:
 - **Lucene** 🔍
 - **Whoosh** 🔍
 
----
-# Calendario delle scadenze:
-- **09/04/2015**: Finire tutti e 3 i Search Engines con la funzionalità aggiuntiva
-- **05/05/2025**: Unione dei Search Engines
-- **12/05/2025**: Fix errors
-- **19/05/2025**: Benchmark
-- **26/05/2025**: PowerPoint
 ---
 
 💬 Se hai domande, dubbi o hai bisogno di supporto, non esitare a **contattarci**! 💬
