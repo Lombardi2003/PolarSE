@@ -116,6 +116,7 @@ search = [postgres,pylucene,whoosh,uscita]  # lista degli IR: è lui a chiamare 
 
 # Funzione main
 def main():
+    nltk.download('stopwords') 
     nltk.download('punkt_tab')  # Scarica il pacchetto NLTK 
     os.system('cls' if os.name == 'nt' else 'clear') 
 
