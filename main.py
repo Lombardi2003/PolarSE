@@ -1,46 +1,29 @@
-# Librerie di sistema
+# librerie di sistema
 import os
 import zipfile
-from tqdm import tqdm  # Importiamo tqdm per la barra di avanzamento
+from tqdm import tqdm
+import nltk  
+import time
+
+# Importiamo i 3 motori di ricerca (IR, cartella che contiene l'IR)
 import Postgres.main_postgres
-import Pylucene.pylucene_IR
-import Whoosh.IRmodel
-import Whoosh.index
-from create_dataset import *
-# Richiamo la cartellla Postgres per avviare il suo main
-import Postgres  # Assicurati che il modulo postgres sia presente nella stessa directory
+import Postgres 
 from Postgres import *
 
+import Pylucene.pylucene_IR
 import Pylucene
 from Pylucene.pylucene_IR import PyLuceneIR
 
+import Whoosh.IRmodel
+import Whoosh.index
 import Whoosh
 from Whoosh import *
 
-import nltk  # Importa la libreria NLTK per il tokenizzatore
-import time
+# importo la creazione del dataset
+from create_dataset import *
 
-# Supponiamo che esista una cartella chiamata "Dataset"
-PATH = "Dataset"
-def postgres():
-    print("Postgres è stato scelto come motore di ricerca.")
-    Postgres.main_postgres.main_postgres() # Chiama la funzione main del modulo Postgres
-def pylucene():
-    print("Pylucene è stato scelto come motore di ricerca.")
-    PyLuceneIR.main_pylucene()  # Chiama la funzione main del modulo Pylucene
-def whoosh():
-    print("Whoosh è stato scelto come motore di ricerca.")
-    Whoosh.IRmodel.main_whoosh()  # Chiama la funzione main del modulo Whoosh
-def uscita():
-    print("Uscita dal programma...")
-    print("Arrivederci!")
-    time.sleep(1)  # Attendi 1 secondo
-    os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
-    exit()  # Esce dal programma
-
-search = [postgres,pylucene,whoosh,uscita]  # Lista dei motori di ricerca disponibili
-
-def download_dataset():# Apri il file ZIP e estrai tutto il suo contenuto nella directory di destinazione
+# Funzione che apre lo ZIP del dataset, estrae tutto il contenuto nella directory di destinazione
+def download_dataset():
     if os.path.isdir(PATH):
         print(f"{PATH} è caricato.")
     elif os.path.exists(PATH+'.zip'):
@@ -62,37 +45,64 @@ def download_dataset():# Apri il file ZIP e estrai tutto il suo contenuto nella 
         print(f"Inizio download del dataset")
         create()
 
+# Funzione che setuppa e indicizza i 3 motori
 def setup():
     print("Setup in corso...")
-    time.sleep(2)  # Attendi 3 secondi
+    time.sleep(2) 
     os.system('cls' if os.name == 'nt' else 'clear')
+
     print("Postgres...")
     Postgres.main_postgres.setup_postgres()  # Chiama la funzione setup_postgres del modulo Postgres
     print("Postgres è stato setuppato correttamente!")
-    time.sleep(2)  # Attendi 3 secondi
+    time.sleep(2)  
     os.system('cls' if os.name == 'nt' else 'clear')
+
     print("Pylucene...")
     PyLuceneIR.create_index()  # Chiama la funzione create_index del modulo Pylucene
     print("\nPylucene è stato setuppato correttamente!")
-    time.sleep(2)  # Attendi 3 secondi
+    time.sleep(2)  
     os.system('cls' if os.name == 'nt' else 'clear')
+
     print("Whoosh...")
     i = Whoosh.index.main_whoosh_setup()  # Chiama la funzione main del modulo Whoosh
     print("\nWhoosh è stato setuppato correttamente!")
-    time.sleep(2)  # Attendi 3 secondi
+    time.sleep(2) 
     os.system('cls' if os.name == 'nt' else 'clear')
-    print("Setup completato!")
-    # Aspetto 3 secondi prima di pulire la console
-    time.sleep(3)  # Attendi 3 secondi
 
+    print("Setup completato!")
+    time.sleep(3)  # Attendi 3 secondi prima di pulire la console
+
+# Chiamata dei 3 IR (in base al valore della scelta)
+search = [postgres,pylucene,whoosh,uscita]  # lista degli IR: è lui a chiamare le funzioni
+
+PATH = "Dataset"
+def postgres():
+    print("Postgres è stato scelto come motore di ricerca.")
+    Postgres.main_postgres.main_postgres() # Chiama la funzione main del modulo Postgres
+def pylucene():
+    print("Pylucene è stato scelto come motore di ricerca.")
+    PyLuceneIR.main_pylucene()  # Chiama la funzione main del modulo Pylucene
+def whoosh():
+    print("Whoosh è stato scelto come motore di ricerca.")
+    Whoosh.IRmodel.main_whoosh()  # Chiama la funzione main del modulo Whoosh
+def uscita():
+    print("Uscita dal programma...")
+    print("Arrivederci!")
+    time.sleep(1) 
+    os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
+    exit() 
 
 # Funzione main
 def main():
-    nltk.download('punkt_tab')  # Scarica il pacchetto NLTK per il tokenizzatore
-    os.system('cls' if os.name == 'nt' else 'clear')
+    nltk.download('punkt_tab')  # Scarica il pacchetto NLTK 
+    os.system('cls' if os.name == 'nt' else 'clear') 
+
+    #Scaricamento Dataset + setup 
     download_dataset()
     setup()
-    os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
+    os.system('cls' if os.name == 'nt' else 'clear') 
+
+    # Corpo della scelta dell'IR
     print("BENVENUTO NEL PROGRAMMA DI GESTIONE DEL DATASET PER FILM E SERIE TV!")
     while True:
         try:

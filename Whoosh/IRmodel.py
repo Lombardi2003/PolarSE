@@ -35,7 +35,6 @@ class IRModel:
 
         searcher = self.index.searcher(weighting=self.model)
         results = searcher.search(parsed_query, limit=10)
-        print(f"Query finale eseguita: {parsed_query}")
 
         res_dict = {}
         for hit in results:
