@@ -3,5 +3,10 @@
     "Q2": "harry potter",
     "Q3": "title:inception OR description:space",
     "Q4": "type:tv AND genres:fantasy OR average_rating:8",
-    "Q5": "genres:adventure AND release_year:2020"
+    "Q5": "genres:adventure AND release_year:2020",
+    "Q6": "description:superhero AND type:tv",
+    "Q7": "genres:animation AND genres:family AND average_rating:7",
+    "Q8": "title:matrix OR description:alien",
+    "Q9": "horror story",
+    "Q10": "princess castle"
 }
