@@ -4,6 +4,7 @@ import zipfile
 from tqdm import tqdm
 import nltk  
 import time
+import shutil
 
 # Importiamo i 3 motori di ricerca (IR, cartella che contiene l'IR)
 import Postgres.main_postgres
@@ -85,11 +86,31 @@ def whoosh():
     print("Whoosh è stato scelto come motore di ricerca.")
     Whoosh.IRmodel.main_whoosh()  # Chiama la funzione main del modulo Whoosh
 def uscita():
-    print("Uscita dal programma...")
-    print("Arrivederci!")
-    time.sleep(1) 
-    os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
-    exit() 
+    from colorama import init, Fore, Back, Style
+    init(autoreset=True)
+    # Box con bordo e colori
+    border = Fore.CYAN + "═" * 40
+    empty_line = Fore.CYAN + "║" + " " * 38 + "║"
+    print()
+    print(border)
+    print(empty_line)
+    print(Fore.CYAN + "║" + Fore.YELLOW + Style.BRIGHT + "     🚪  Uscita dal programma...      " + Fore.CYAN + "║")
+    print(Fore.CYAN + "║" + Fore.MAGENTA + Style.BRIGHT + "        👋  Arrivederc!!!!            " + Fore.CYAN + "║")
+    print(empty_line)
+    print(border)
+    # Piccola pausa prima di pulire
+    time.sleep(1.5)
+    # Effetto "caricamento" con colori e emoji
+    loading_msg = Fore.GREEN + Style.BRIGHT + "Sto chiudendo il programma "
+    print("\n" + loading_msg, end="", flush=True)
+    for i in range(3):
+        print(Fore.GREEN + Style.BRIGHT + "🔒", end="", flush=True)
+        time.sleep(0.7)
+    print()
+    # Pulizia console
+    os.system('cls' if os.name == 'nt' else 'clear')
+    exit()
+
 
 search = [postgres,pylucene,whoosh,uscita]  # lista degli IR: è lui a chiamare le funzioni
 
@@ -100,20 +121,22 @@ def main():
 
     #Scaricamento Dataset + setup 
     download_dataset()
-    setup()
+    #setup()
     os.system('cls' if os.name == 'nt' else 'clear') 
 
     # Corpo della scelta dell'IR
-    print("BENVENUTO NEL PROGRAMMA DI GESTIONE DEL DATASET PER FILM E SERIE TV!")
+    terminal_width = shutil.get_terminal_size().columns
+    titolo = "🦇 \033[1mBENVENUTO NEL PROGRAMMA DI GESTIONE DEL DATASET PER FILM E SERIE TV!!!\033[0m 🦇"
+    print(titolo.center(terminal_width))
     while True:
         try:
             print("Scegli quale motore di ricerca vuoi utilizzare:")
-            print("1: Postgres")
-            print("2: Pylucene")
-            print("3: Whoosh")
-            print("4: Esci dal programma")
-            print("61016: Una sorpresa")
-            choice = int(input("Inserisci la tua scelta (1/2/3/4): "))
+            print("  \033[1;32m1\033[0m: \033[1mPostgres\033[0m")
+            print("  \033[1;32m2\033[0m: \033[1mPylucene\033[0m")
+            print("  \033[1;32m3\033[0m: \033[1mWhoosh\033[0m")
+            print("  \033[1;32m4\033[0m: \033[1mEsci dal programma\033[0m")
+            print("  \033[1;38;5;229m61016\033[0m: \033[1mUna sorpresa🎁\033[0m")
+            choice = int(input("\033[1mInserisci la tua scelta\033[0m (1/2/3/4): "))
             if choice==61016:
                 os.system('cls' if os.name == 'nt' else 'clear')
                 print("*" * 60)
