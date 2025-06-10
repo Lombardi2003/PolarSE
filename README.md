@@ -93,7 +93,7 @@ Per eseguire PolarSE in Docker, segui questi passaggi:
        cd /workspace
     ```
  
-🛠️ **Configurazione della Connessione a PostgreSQL**
+### 🛠️ **Configurazione della Connessione a PostgreSQL**
 
 Se stai utilizzando Docker per eseguire l’applicazione, ma PostgreSQL è installato localmente sul tuo host, dovrai modificare la configurazione della connessione al database:
 
@@ -131,7 +131,7 @@ All'avvio, il programma esegue i seguenti passaggi:
 
 ---
 
-## 🛠️ **Tecnologie Utilizzate**:
+## 🛠️ **Tecnologie Utilizzate**
 - **Python** 🐍
 - **TMDb API** 🎬
 - **PostgreSQL** 🗃️
