@@ -1,0 +1,64 @@
+DOCUMENTAZIONE DEL BENCHMARK DI PolarSE
+
+Per generare il benchmark relativo al motore di ricerca PolarSE (composto da 3 sotto-motori: uno in PostgreSQL, uno in Pylucene e uno in Whoosh), abbiamo proceduto come segue:
+
+FASE 1) Definizione delle Query
+Le query di test, utili a creare il cosiddetto "Gold Standard" (ossia la lista dei risultati rilevanti e attesi dai motori), sono definite nel file "Query per golden list.json".
+Per ogni query, è stata ideata una User Information Need (UIN), poi tradotta in linguaggio comprensibile ai motori.
+
+UIN1: Cerco qualcosa che abbia a che fare con Twilight
+-> Q1: twilight
+
+UIN2: Cerco i film di Harry Potter
+-> Q2: harry potter
+
+UIN3: Cerco film con Inception, oppure qualcosa a tema spaziale
+-> Q3: inception OR space
+
+UIN4: Cerco serie TV fantasy o con voti degli utenti pari a 8
+-> Q4: type:tv AND genres:fantasy OR average_rating:8
+
+UIN5: Cerco film d'avventura usciti nel 2020
+-> Q5: genres:adventure AND release_year:2020
+
+UIN6: Cerco serie TV la cui descrizione includa "superhero"
+-> Q6: description:superhero AND type:tv
+
+UIN7: Cerco film d'animazione per famiglie con voti degli utenti pari a 7
+-> Q7: genres:animation AND genres:family AND average_rating:7
+
+UIN8: Cerco film Matrix o la cui descrizione parli di "alien"
+-> Q8: matrix OR description:alien
+
+UIN9: Cerco storie dell'orrore
+-> Q9: horror story
+
+UIN10: Cerco film o serie TV che abbiano a che fare con principesse e castelli
+-> Q10: princess castle
+
+______________________________________________________________________________________________________
+
+FASE 2) Costruzione del Gold Standard
+Ogni query è stata lanciata anche sul sito di TMDb, il sito web al quale abbiamo fatto riferimento per la costruzione del dataset. Abbiamo successivamente rintracciato i primi 10 risultati restituiti dal sito nella nostra lista di documenti JSON e, grazie a questi, abbiamo costruito una lista di 10 liste (GOLDEN_RESULTS), ognuna contenente i 10 ID dei documenti rilevanti per ognuna delle 10 query descritte nella Fase 1. Questo approccio garantisce che il gold standard sia indipendente da un singolo motore e rifletta una valutazione esperta dei candidati più rilevanti per ciascuna query.
+
+______________________________________________________________________________________________________
+
+FASE 3) Esecuzione delle query
+A questo punto, abbiamo invocato ogni query su ogni singolo sotto-motore di cui è composto PolarSE tramite benchmark.py. Abbiamo salvato gli ID dei 10 risultati restituiti da ogni motore in diverse liste di liste, formate come segue:
+
+bench_postgres = [[id1,...], [id1,...], ..., [id1,...]]
+bench_pylucene = [[...], ..., [...]]
+bench_whoosh   = [[...], ..., [...]]
+
+______________________________________________________________________________________________________
+
+FASE 4) Calcolo delle Metriche di performance (con k=5).
+Per valutare i singoli motori, abbiamo confrontato i 10 risultati restituiti con quelli contenuti nel Gold Standard e abbiamo usato sempre k = 5:
+
+• Precision@5: fra i primi 5 risultati, quanti sono nel Gold Standard?
+• Recall@5: fra i primi 5 recuperati dai motori, quanti coprono il gold (|relevant|)?
+• F1@5: media armonica di P@5 e R@5.
+• Average Precision: media delle Precision@i sui posizionamenti in cui compaiono documenti rilevanti.
+• Mean Average Precision (MAP): media delle AP sulle 10 query.
+
+Alla fine, i valori medi di ciascun motore sono stampati a schermo e plottati con matplotlib e seaborn, per creare grafici utili a riprodurre e confrontare in modo oggettivo l'accuratezza e la copertura dei tre motori.
