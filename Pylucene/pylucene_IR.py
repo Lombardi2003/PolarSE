@@ -63,6 +63,12 @@ class PyLuceneIR:
     #@staticmethod
     def create_index():
         PyLuceneIR.init_lucene()
+
+        # Controllo se l'indice esiste già e ha dei file
+        if os.path.exists(PyLuceneIR.MAIN_INDEX) and os.listdir(PyLuceneIR.MAIN_INDEX):
+            print("Indice già presente, indicizzazione saltata.")
+            return
+
         PyLuceneIR.prepare_index_dir()
 
         main_index_dir = FSDirectory.open(Paths.get(PyLuceneIR.MAIN_INDEX))
