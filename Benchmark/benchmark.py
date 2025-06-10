@@ -245,19 +245,32 @@ def plot_metrics(precision_postgres_final, recall_postgres_final, f1_postgres_fi
         plt.savefig(os.path.join(graphics_dir, f'grafico_{metric.replace(" ", "_")}.png'))
         plt.close()
     
+def save_benchmark(bench_postgres, bench_pylucene, bench_whoosh):
+    # Creo un dizionario strutturato con nomi chiari
+    data = {
+        "bench_postgres": bench_postgres,
+        "bench_pylucene": bench_pylucene,
+        "bench_whoosh": bench_whoosh
+    }
+
+    # Salvo in formato JSON ben formattato
+    with open('Benchmark/bench_save.json', 'w') as f:
+        json.dump(data, f, indent=4)
 
 def main():
-
-    # creo una lista di liste di ID per ogni IR
+    # Creo una lista di liste di ID per ogni IR
     bench_postgres = benchmark_postgres()
     bench_pylucene = benchmark_pylucene()
     bench_whoosh = benchmark_whoosh()
+
+    print("I risultati sono stati ottenuti con successo per tutti i motori di ricerca e sono stati salvati correttamente.\n")
+    save_benchmark(bench_postgres, bench_pylucene, bench_whoosh)
 
     print("\n== LISTA DI LISTE DI GOLDEN LIST")
     for i, query_results in enumerate(GOLDEN_RESULTS, start=1):
         print(f"Query {i}: {query_results}")
 
-    # stampa liste (ci serve solo per la golden list)
+    # Stampa liste (ci serve solo per la golden list)
     print("\n== LISTA DI LISTE DI ID: POSTGRES ==")
     for i, query_results in enumerate(bench_postgres, start=1):
         print(f"Query {i}: {query_results}")
