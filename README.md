@@ -37,6 +37,8 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 ---
 
 ## 📦 **Configurazioni**:
+All'interno del progetto è stato creato un file `requirements.txt`, che permette di scaricare in maniera automatizzata tutte le librerie e le dipendenze necessarie per il corretto funzionamento del programma
+```pip install -r requirements.txt```
 ### **PostgresSQL**
 ### **Whoosh**
 ### **Pylucene**
@@ -63,13 +65,6 @@ All'avvio, il programma esegue i seguenti passaggi:
 - **Lucene** 🔍
 - **Whoosh** 🔍
 
----
-# Calendario delle scadenze:
-- **09/04/2015**: Finire tutti e 3 i Search Engines con la funzionalità aggiuntiva
-- **05/05/2025**: Unione dei Search Engines
-- **12/05/2025**: Fix errors
-- **19/05/2025**: Benchmark
-- **26/05/2025**: PowerPoint
 ---
 
 💬 Se hai domande, dubbi o hai bisogno di supporto, non esitare a **contattarci**! 💬
