@@ -117,7 +117,15 @@ Se stai utilizzando Docker per eseguire l’applicazione, ma PostgreSQL è insta
 > Questo cambiamento permette al container di connettersi correttamente al database PostgreSQL in esecuzione sull'host.
 
 ---
+## Benchmark
+Si è creato uno script benchmark si è creato lo script [benchmark.py](Benchmark/benchmark.py) esegue le stesse query su tutti i Search Engine e si procede al confronto. Per eseguire lo script bisogna eseguire il comando:
+   ```bash
+      cd Benchmark
+      python benchmark.py
+   ```
+Lo script restituirà 3 liste con gli *id* dei film che corrisponderano alle query testate. 
 
+---
 ## 📝 **Istruzioni**
 All'avvio, il programma esegue i seguenti passaggi:
 1. **Verifica della presenza del dataset**
