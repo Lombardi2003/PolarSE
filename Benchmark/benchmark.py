@@ -156,6 +156,8 @@ def compute_metrics(bench_results, golden_results, engine_name, k=5):
     f1s = []
     aps = []
 
+    # calcolo i parametri per ogni query 
+
     for i in range(len(golden_results)):
         p = precision_at_k(bench_results[i], golden_results[i], k=k)
         r = recall_at_k(bench_results[i], golden_results[i], k=k)
@@ -167,14 +169,13 @@ def compute_metrics(bench_results, golden_results, engine_name, k=5):
         f1s.append(f1)
         aps.append(ap)
 
-    # Media dei valori
+    # calcolo dei parametri 
     precision_final = sum(precisions) / len(precisions)
     recall_final = sum(recalls) / len(recalls)
     f1_final = sum(f1s) / len(f1s)
     ap_final = sum(aps) / len(aps)
     map_final = mean_average_precision(bench_results, golden_results)
 
-    # Stampa
     print(f"\n== {engine_name.upper()} RESULTS ==")
     print(f"Precision@{k}: {precision_final:.3f}")
     print(f"Recall@{k}: {recall_final:.3f}")
@@ -182,7 +183,6 @@ def compute_metrics(bench_results, golden_results, engine_name, k=5):
     print(f"Average Precision: {ap_final:.3f}")
     print(f"Mean Average Precision: {map_final:.3f}")
 
-    # Ritorna i valori
     return precision_final, recall_final, f1_final, ap_final, map_final
 
 # costruzione dei grafici
@@ -191,7 +191,7 @@ def plot_metrics(precision_postgres_final, recall_postgres_final, f1_postgres_fi
                  precision_whoosh_final, recall_whoosh_final, f1_whoosh_final, ap_whoosh_final, map_whoosh_final,
                  precision_pylucene_final, recall_pylucene_final, f1_pylucene_final, ap_pylucene_final, map_pylucene_final):
     
-    # Creo la cartella per le immagini
+    # creo cartella per i grafici \ tabelle
     graphics_dir = os.path.join("benchmark", "graphics")
     os.makedirs(graphics_dir, exist_ok=True)
 
