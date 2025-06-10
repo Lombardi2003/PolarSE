@@ -50,6 +50,12 @@ Per avviare il programma occorre lanciare il file `main.py`
 ```bash
    python main.py
    ```
+In caso di errori legati a NLTK in fase di avvio del main, è possibile risolvere lanciando i seguenti comandi (all'interno di una shell Python):
+```bash
+   >>> import nltk
+   >>> nltk.download('stopwords')
+   >>> nltk.download('punkt_tab')
+   ```
 
 ### **PostgresSQL**
 Per utilizzare il motore di ricerca **PostgreSQL**, è necessario avere un database PostgreSQL attivo.  
@@ -117,13 +123,22 @@ Se stai utilizzando Docker per eseguire l’applicazione, ma PostgreSQL è insta
 > Questo cambiamento permette al container di connettersi correttamente al database PostgreSQL in esecuzione sull'host.
 
 ---
-## Benchmark
-Si è creato uno script benchmark si è creato lo script [benchmark.py](Benchmark/benchmark.py) esegue le stesse query su tutti i Search Engine e si procede al confronto. Per eseguire lo script bisogna eseguire il comando:
+## 📊 **Benchmark**
+Per il calcolo del benchmark è stato creato uno script [benchmark.py](Benchmark/benchmark.py), che esegue le stesse query su tutti i Search Engine e procede al confronto tramite delle funzioni che si occupano di confrontare le varie metriche di prestazione per i tre motori di ricerca. 
+Per eseguire lo script bisogna eseguire il comando:
+
    ```bash
       cd Benchmark
       python benchmark.py
    ```
 Lo script restituirà 3 liste con gli *id* dei film che corrisponderano alle query testate. 
+
+In benchmark.py si vanno a calcolare i seguenti parametri:
+- `Precision@5`, che misura la frazione dei primi 5 risultati restituiti dal motore che sono rilevanti (cioè presenti nella golden list);
+- `Recall@5`, che misura la frazione dei documenti rilevanti (golden list) che sono stati trovati nei primi k risultati;
+- `F1@5`, che e la media armonica tra precision e recall. È utile quando si vuole un equilibrio tra i due;
+- `Average precision`, che misura la precisione media al momento in cui ogni documento rilevante viene trovato. Tiene conto dell'ordine dei risultati. È più sofisticata di Precision@5;
+- `Mean average precision`, che è la media di tutte le Average Precision calcolate su più query. Dà una misura complessiva dell’efficacia del motore
 
 ---
 ## 📝 **Istruzioni**
