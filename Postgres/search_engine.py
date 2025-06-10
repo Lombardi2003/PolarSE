@@ -11,7 +11,7 @@ class SearchEngine:
 
     @staticmethod
     def parse_query_input(control=None):
-        operator = None
+        operator = list()
         if control is None:
             text = input("Inserisci la query ([campo:valore] oppure più campi separati da un operatore booleano): ")
         else:
@@ -23,6 +23,7 @@ class SearchEngine:
             pairs.append(text.strip())
             #pairs = text.strip().split()
         criteria = []
+        c=0
         for pair in pairs:
             # Query con uguale
             if ':' in pair:
@@ -55,8 +56,11 @@ class SearchEngine:
                 # fallback: se scrive solo una parola senza campo, assume sia il titolo
                 criteria.append(("title", pair, "="))
                 criteria.append(("description", pair, "="))
-                operator = list()
-                operator.append("OR")
+                if c == 0:
+                    operator.insert(c,'OR')  # Aggiunge 'OR' all'inizio della lista degli operatori
+                else:
+                    operator.insert(c+1,'OR')
+            c += 1
         return criteria, operator
 
     def search_auto(self, ranking_method='tfidf', search_value=None):
@@ -361,7 +365,6 @@ class SearchEngine:
             """
         # Inserisce prima i valori per ts_headline, poi gli altri
         final_values = headline_values + values
-
         return query, final_values
 
     @staticmethod
