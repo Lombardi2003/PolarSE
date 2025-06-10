@@ -277,12 +277,12 @@ def main():
 
     print("I risultati sono stati ottenuti con successo per tutti i motori di ricerca e sono stati salvati correttamente.\n")
     save_benchmark(bench_postgres, bench_pylucene, bench_whoosh)
-
+    
+    # stampa di liste
     print("\n== LISTA DI LISTE DI GOLDEN LIST")
     for i, query_results in enumerate(GOLDEN_RESULTS, start=1):
         print(f"Query {i}: {query_results}")
 
-    # Stampa liste (ci serve solo per la golden list)
     print("\n== LISTA DI LISTE DI ID: POSTGRES ==")
     for i, query_results in enumerate(bench_postgres, start=1):
         print(f"Query {i}: {query_results}")
