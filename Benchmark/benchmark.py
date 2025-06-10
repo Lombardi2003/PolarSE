@@ -4,6 +4,7 @@ import sys
 import time
 import pandas as pd
 import json
+from collections import Counter
 from tabulate import tabulate
 
 # librerie per Postgres
@@ -103,6 +104,22 @@ def benchmark_whoosh():
 
     return results
 
+def generate_fuzzy_gold_standard(bench_postgres, bench_pylucene, bench_whoosh):
+    golden = []
+
+    for i in range(len(bench_postgres)):
+        # Unisci tutti gli ID della query i-esima
+        combined = bench_postgres[i] + bench_pylucene[i] + bench_whoosh[i]
+
+        # Conta le frequenze
+        counter = Counter(combined)
+
+        # Ordina per frequenza decrescente, poi per posizione casuale/stabile
+        ranked = [doc_id for doc_id, _ in counter.most_common()]
+
+        golden.append(ranked)
+
+    return golden
 
 # formule per il confronto di prestazioni
 
@@ -252,6 +269,11 @@ def main():
     bench_postgres = benchmark_postgres()
     bench_pylucene = benchmark_pylucene()
     bench_whoosh = benchmark_whoosh()
+
+    GOLDEN_RESULTS = generate_fuzzy_gold_standard(bench_postgres, bench_pylucene, bench_whoosh)
+    print("\n== LISTA DI LISTE DI GOLDEN LIST")
+    for i, query_results in enumerate(GOLDEN_RESULTS, start=1):
+        print(f"Query {i}: {query_results}")
 
     # stampa liste (ci serve solo per la golden list)
     print("\n== LISTA DI LISTE DI ID: POSTGRES ==")
