@@ -65,6 +65,7 @@ def setup():
     os.system('cls' if os.name == 'nt' else 'clear')
 
     print("Whoosh...")
+    print("ATTENZIONE: L'indicizzazione di Whoosh richiederà del tempo.\n Se il programma sembra bloccato, è normale.\n Per favore, attendi fino al completamento e non digitare né cliccare nulla.")
     i = Whoosh.index.main_whoosh_setup()  # Chiama la funzione main del modulo Whoosh
     print("\nWhoosh è stato setuppato correttamente!")
     time.sleep(2) 
