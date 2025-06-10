@@ -37,16 +37,16 @@ QUERY_LIST = estrai_json()
 # definizione delle liste di liste (golden, pg, pylucene, whoosh)
 
 GOLDEN_RESULTS = [
-         [17406, 17774, 4314, 15304, 303, 13813, 14946, 18370, 19800, 6859],
-         [197, 144, 93, 279, 182, 258, 160, 201, 8131, 1246],
-         [181, 12920, 4990, 45, 12687, 6696, 13474, 6385, 6482, 16517],
-         [10007, 10030, 10041, 10051, 10059, 10061, 10064, 10067, 10074, 10081],
-         [1031, 1389, 1640, 1719, 2154, 2293, 2379, 2578, 2702, 2753],
-         [100, 101, 102, 103, 104, 105, 106, 107, 108, 109],
-         [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009],
-         [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009],
-         [3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009],
-         [4000, 4001, 4002, 4003, 4004, 4005, 4006, 4007, 4008, 4009]
+        [17406, 15304, 4314, 17774, 12156, 16005, 14946, 13813, 18370, 303],
+        [197, 144, 93, 201, 279, 258, 1246, 5021, 5972, 8131],
+        [12687, 12920, 181, 4990, 45, 6696, 13474, 6385, 6482, 16517],
+        [10030, 10064, 10120, 10040, 10108, 10026, 10068, 10082, 10084, 10125],
+        [1031, 10748, 10198, 10334, 10443, 10527, 10837, 10917, 10958, 10188],
+        [13903, 16881, 10933, 17346, 10841, 18352, 18418, 12005, 12441, 17477],
+        [12678, 10689, 1080, 11430, 11501, 1253, 12870, 13019, 13252, 1000],
+        [15997, 4150, 189, 1300, 1414, 567, 702, 15377, 4427, 4944],
+        [18453, 11139, 8212, 19149, 1014, 19054, 16745, 8520, 8941, 17732],
+        [6410, 19851, 16788, 4807, 5304, 18633, 4490, 8946, 5032, 5350]
 ]
 
 def benchmark_postgres():
@@ -103,23 +103,6 @@ def benchmark_whoosh():
         results.append(id_list)
 
     return results
-
-def generate_fuzzy_gold_standard(bench_postgres, bench_pylucene, bench_whoosh):
-    golden = []
-
-    for i in range(len(bench_postgres)):
-        # Unisci tutti gli ID della query i-esima
-        combined = bench_postgres[i] + bench_pylucene[i] + bench_whoosh[i]
-
-        # Conta le frequenze
-        counter = Counter(combined)
-
-        # Ordina per frequenza decrescente, poi per posizione casuale/stabile
-        ranked = [doc_id for doc_id, _ in counter.most_common()]
-
-        golden.append(ranked)
-
-    return golden
 
 # formule per il confronto di prestazioni
 
@@ -270,7 +253,6 @@ def main():
     bench_pylucene = benchmark_pylucene()
     bench_whoosh = benchmark_whoosh()
 
-    GOLDEN_RESULTS = generate_fuzzy_gold_standard(bench_postgres, bench_pylucene, bench_whoosh)
     print("\n== LISTA DI LISTE DI GOLDEN LIST")
     for i, query_results in enumerate(GOLDEN_RESULTS, start=1):
         print(f"Query {i}: {query_results}")
