@@ -60,7 +60,7 @@ def main_whoosh():
     index_dir = f"{config_data['INDEX']['MAINDIR']}/{config_data['INDEX']['ACCDIR']}"
 
     # scelta del metodo di ranking
-    print("Scegli il metodo di ranking:")
+    print("\n Scegli il metodo di ranking:")
     print("1. BM25 Similarity (predefinito)")
     print("2. TF-IDF")
     choice = input("Inserisci il numero della scelta: ")
@@ -77,11 +77,11 @@ def main_whoosh():
     ir_model = IRModel(index_dir, weightingModel=ranking_model)
 
     # input della query
-    user_query = input("Inserisci la query di ricerca: ")
+    user_query = input("\n Inserisci la query di ricerca: ")
 
     # se la query è di tipo title, description, o senza campi, chiede se voglio effettuare la fuzzy
     if (not any(field in user_query for field in ["title:", "description:", "genres:", "release_year:", "average_rating:", "type:", "id:", "processed_description:"]) or (user_query.startswith("title:")) or (user_query.startswith("description:")) ):
-        print("Vuoi eseguire una ricerca fuzzy nei campi 'title' e 'description'? (s/n)")
+        print("\n Vuoi eseguire una ricerca fuzzy nei campi 'title' e 'description'? (s/n)")
         fuzzy_choice = input("Inserisci 's' per sì, 'n' per no: ").lower()
         fuzzy_search = (fuzzy_choice == 's') # è un'espressione booleana: se fuzzy_choiche == s allora si imposta automaticamente a true
     else:
@@ -94,7 +94,7 @@ def main_whoosh():
     if results:
         print(f"\nRisultati trovati: {len(results)}\n")
         for i, (doc_id, doc_info) in enumerate(results.items(), start=1):
-            print(f"Risultato {i}")
+            print(f"\n Risultato {i}")
             print(f"Punteggio di score per questo documento: {doc_info['score']:.4f}")
             print(f"ID: {doc_info['id']}")
             print(f"Title: {doc_info['title']}")
