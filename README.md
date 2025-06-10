@@ -37,6 +37,11 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 ---
 
 ## 📦 **Configurazioni**:
+Per scaricare il progetto in locale, lanciare il comando:
+```bash
+   git clone https://github.com/Lombardi2003/PolarSE.git
+   ```
+
 All'interno del progetto è stato creato un file `requirements.txt`, che permette di scaricare in maniera automatizzata tutte le librerie e le dipendenze necessarie per il corretto funzionamento del programma
 ```bash
    pip install -r requirements.txt
@@ -100,7 +105,7 @@ Se stai utilizzando Docker per eseguire l’applicazione, ma PostgreSQL è insta
 2. **Individua il campo:**
 
    ```bash
-       "IP_ADDRESS": "localhost"
+       "IP_ADDRESS": "127.0.0.1"
     ```
 3. **Sostituiscilo con:**
  
@@ -132,7 +137,3 @@ All'avvio, il programma esegue i seguenti passaggi:
 - **PostgreSQL** 🗃️
 - **Lucene** 🔍
 - **Whoosh** 🔍
-
----
-
-💬 Se hai domande, dubbi o hai bisogno di supporto, non esitare a **contattarci**! 💬
