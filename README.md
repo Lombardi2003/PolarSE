@@ -130,7 +130,12 @@ Per eseguire lo script bisogna eseguire il comando:
       cd Benchmark
       python benchmark.py
    ```
-Lo script restituirà 3 liste con gli *id* dei film che corrisponderano alle query testate. 
+oppure anche
+
+   ```bash
+      python Benchmark/benchmark.py
+   ```
+Lo script restituirà 3 liste con gli *id* dei film che corrisponderano alle query testate e plotta dei grafici e tabelle nella cartella Benchmark/graphics, per aiutare a visualizzare a colpo d'occhio le metriche per ogni motore.
 
 In benchmark.py si vanno a calcolare i seguenti parametri:
 - `Precision@5`, che misura la frazione dei primi 5 risultati restituiti dal motore che sono rilevanti (cioè presenti nella golden list);
@@ -140,7 +145,7 @@ In benchmark.py si vanno a calcolare i seguenti parametri:
 - `Mean average precision`, che è la media di tutte le Average Precision calcolate su più query. Dà una misura complessiva dell’efficacia del motore
 
 ---
-## 📝 **Istruzioni**
+## 📝 **Informazioni aggiuntive**
 All'avvio, il programma esegue i seguenti passaggi:
 1. **Verifica della presenza del dataset**
    - Se il dataset è disponibile, procede con l'inizializzazione dei motori di ricerca.
