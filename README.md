@@ -38,10 +38,66 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 
 ## 📦 **Configurazioni**:
 All'interno del progetto è stato creato un file `requirements.txt`, che permette di scaricare in maniera automatizzata tutte le librerie e le dipendenze necessarie per il corretto funzionamento del programma
-```pip install -r requirements.txt```
+```bash
+   pip install -r requirements.txt
+   ```
+Per avviare il programma occorre lanciare il file `main.py`
+```bash
+   python main.py
+   ```
 ### **PostgresSQL**
 ### **Whoosh**
 ### **Pylucene**
+
+Durante la fase di sviluppo del progetto PolarSE, sono emerse alcune incompatibilità ambientali con PyLucene, soprattutto legate alla configurazione della JVM e alla compilazione delle librerie native. Per risolvere questi problemi e garantire un ambiente stabile e coerente su qualsiasi macchina, il progetto è stato completamente containerizzato.
+
+L’utilizzo di Docker permette di avviare l'intero sistema — motori di ricerca, database e interfaccia — in maniera semplificata, senza dover gestire manualmente le dipendenze o configurare ambienti complessi.
+
+Per eseguire PolarSE in Docker, segui questi passaggi:
+1. **Scarica l’immagine Docker preconfigurata con PyLucene**:
+   
+    ```bash
+       docker pull coady/pylucene
+    ```
+2. **Avvia un nuovo contenitore, montando il progetto all’interno:**
+
+    ```bash
+       docker run -it --name gestione-info-container -v "PERCORSO DELLA CARTELLA COPIATA DA GIT":/workspace coady/pylucene
+       docker start -ai gestione-info-container
+   ```
+3. **Riavvia un contenitore già esistente:**
+   
+   ```bash
+       docker start -ai gestione-info-container
+   ```
+4. **Esegui il progetto all'interno del container. Una volta dentro il container:**
+   
+   ```bash
+       cd /workspace
+    ```
+ 
+🛠️ **Configurazione della Connessione a PostgreSQL**
+
+Se stai utilizzando Docker per eseguire l’applicazione, ma PostgreSQL è installato localmente sul tuo host, dovrai modificare la configurazione della connessione al database:
+
+1. **Apri il file:**
+
+   ```bash
+       Postgres/Postgres.json
+    ```
+2. **Individua il campo:**
+
+   ```bash
+       "IP_ADDRESS": "localhost"
+    ```
+3. **Sostituiscilo con:**
+ 
+   ```bash
+       "IP_ADDRESS": "host.docker.internal"
+    ```
+
+
+> Questo cambiamento permette al container di connettersi correttamente al database PostgreSQL in esecuzione sull'host.
 
 ---
 
