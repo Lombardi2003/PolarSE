@@ -85,13 +85,12 @@ Per eseguire PolarSE in Docker, segui questi passaggi:
 2. **Avvia un nuovo contenitore, montando il progetto all’interno:**
 
     ```bash
-       docker run -it --name gestione-info-container -v "PERCORSO DELLA CARTELLA COPIATA DA GIT":/workspace coady/pylucene
-       docker start -ai gestione-info-container
+       docker run -it --name polar-se -v .:/workspace -w /workspace coady/pylucene bash
    ```
 3. **Riavvia un contenitore già esistente:**
    
    ```bash
-       docker start -ai gestione-info-container
+       docker start -ai polar-se
    ```
 4. **Esegui il progetto all'interno del container. Una volta dentro il container:**
    
