@@ -142,7 +142,7 @@ class SearchEngine:
             if ranking_method == 'bm25':
                 query = f"""
                 SELECT id, title, release_year, genres, description, type, average_rating,
-                       ts_rank_cd({ts_vector}, {ts_query}) AS rank
+                       ts_rank_cd({ts_vector}, {ts_query}) AS rank,
                        ts_headline('english', {field}, {ts_query}) AS headline
                 FROM dataset
                 WHERE {ts_vector} @@ {ts_query}
@@ -151,7 +151,7 @@ class SearchEngine:
                 """
             else:
                 query = f"""
-                SELECT id title, release_year, genres, description, type, average_rating,
+                SELECT id, title, release_year, genres, description, type, average_rating,
                        ts_rank({ts_vector}, {ts_query}) AS rank,
                        ts_headline('english', {field}, {ts_query}) AS headline
                 FROM dataset
@@ -192,8 +192,10 @@ class SearchEngine:
         cur = self.conn.cursor()
         sql_query = SearchEngine.generate_query(field, search_value, operation, ranking_method='bm25')
         ts_query_value = SearchEngine.generate_ts_query(search_value)
-        # Usiamo plainto_tsquery invece di to_tsquery per semplificare la sintassi
-        cur.execute(sql_query, (ts_query_value, ts_query_value))  
+        # Conta il numero di %s nella query per passare il giusto numero di parametri
+        num_placeholders = sql_query.count('%s')
+        params = tuple([ts_query_value] * num_placeholders)
+        cur.execute(sql_query, params)
         results = cur.fetchall()
         cur.close()
         return results
