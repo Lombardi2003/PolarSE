@@ -127,12 +127,6 @@ Per il calcolo del benchmark è stato creato uno script [benchmark.py](Benchmark
 Per eseguire lo script bisogna eseguire il comando:
 
    ```bash
-      cd Benchmark
-      python benchmark.py
-   ```
-oppure anche
-
-   ```bash
       python Benchmark/benchmark.py
    ```
 Lo script restituirà 3 liste con gli *id* dei film che corrisponderano alle query testate e plotta dei grafici e tabelle nella cartella Benchmark/graphics, per aiutare a visualizzare a colpo d'occhio le metriche per ogni motore.
