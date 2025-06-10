@@ -4,8 +4,6 @@ import sys
 import time
 import pandas as pd
 import json
-from collections import Counter
-from tabulate import tabulate
 
 # librerie per Postgres
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -207,15 +205,29 @@ def plot_metrics(precision_postgres_final, recall_postgres_final, f1_postgres_fi
         'Mean Average Precision': [map_postgres_final, map_whoosh_final, map_pylucene_final]
     })
 
-    # TABELLA
-    table = df.values.tolist()
-    headers = df.columns.tolist()
-    fig, ax = plt.subplots(figsize=(10, 2))
+    # TABELLA (con formattazione decimale)
+    df_formatted = df.copy()
+    for col in df.columns[1:]: 
+        df_formatted[col] = df[col].apply(lambda x: f"{x:.2f}")
+
+    fig, ax = plt.subplots(figsize=(12, 3))
     ax.axis('off')
-    table = ax.table(cellText=df.values, colLabels=df.columns, cellLoc='center', loc='center')
+
+    table = ax.table(cellText=df_formatted.values,
+                    colLabels=df_formatted.columns,
+                    cellLoc='center',
+                    loc='center')
     table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    table.scale(1, 1.5)
+    table.set_fontsize(11)
+    table.scale(1.3, 1.8)
+
+    for (row, col), cell in table.get_celld().items():
+        cell.set_linewidth(1)
+        cell.set_edgecolor("black")
+        if row == 0: 
+            cell.set_text_props(weight='bold', color='black')
+            cell.set_facecolor('#e6e6e6')  
+        
     plt.tight_layout()
     plt.savefig(os.path.join(graphics_dir, 'tabella_metriche.png'))
     plt.close()
