@@ -123,7 +123,7 @@ Se stai utilizzando Docker per eseguire l’applicazione, ma PostgreSQL è insta
 > Questo cambiamento permette al container di connettersi correttamente al database PostgreSQL in esecuzione sull'host.
 
 ---
-## Benchmark
+## 📊 **Benchmark**
 Per il calcolo del benchmark è stato creato uno script [benchmark.py](Benchmark/benchmark.py), che esegue le stesse query su tutti i Search Engine e procede al confronto tramite delle funzioni che si occupano di confrontare le varie metriche di prestazione per i tre motori di ricerca. 
 Per eseguire lo script bisogna eseguire il comando:
 
