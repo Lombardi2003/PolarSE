@@ -121,7 +121,7 @@ def main():
 
     #Scaricamento Dataset + setup 
     download_dataset()
-    #setup()
+    setup()
     os.system('cls' if os.name == 'nt' else 'clear') 
 
     # Corpo della scelta dell'IR
