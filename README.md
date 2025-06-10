@@ -92,7 +92,7 @@ Per eseguire PolarSE in Docker, segui questi passaggi:
    ```bash
        docker start -ai polar-se
    ```
-4. **Esegui il progetto all'interno del container. Una volta dentro il container:**
+3b. **Se, una volta riavviato, non si riavvia nella cartella workspace:**
    
    ```bash
        cd /workspace
