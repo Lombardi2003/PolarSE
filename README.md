@@ -45,8 +45,20 @@ Per avviare il programma occorre lanciare il file `main.py`
 ```bash
    python main.py
    ```
+
 ### **PostgresSQL**
+Per utilizzare il motore di ricerca **PostgreSQL**, è necessario avere un database PostgreSQL attivo.  
+Nel progetto, **pgAdmin** viene utilizzato come interfaccia grafica per la gestione e il monitoraggio del database.
+
+Assicurati di:
+- Avere **PostgreSQL** installato e funzionante.
+- Avere **pgAdmin** configurato per connettersi al tuo database.
+- Verificare che le credenziali di accesso e le informazioni di rete corrispondano a quelle specificate nel file `postgres.json`
+
 ### **Whoosh**
+L’indice Whoosh viene generato automaticamente all’avvio del programma, **non è necessario configurare nulla manualmente**.  
+Assicurati solo che la directory dei file indicizzati sia scrivibile e che tutte le dipendenze Python siano installate correttamente (tramite `requirements.txt`).
+
 ### **Pylucene**
 
 Durante la fase di sviluppo del progetto PolarSE, sono emerse alcune incompatibilità ambientali con PyLucene, soprattutto legate alla configurazione della JVM e alla compilazione delle librerie native. Per risolvere questi problemi e garantire un ambiente stabile e coerente su qualsiasi macchina, il progetto è stato completamente containerizzato.
