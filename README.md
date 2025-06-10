@@ -96,7 +96,7 @@ Per eseguire PolarSE in Docker, segui questi passaggi:
    
    ```bash
        cd /workspace
-    ```
+   ```
  
 ### 🛠️ **Configurazione della Connessione a PostgreSQL**
 
