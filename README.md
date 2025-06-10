@@ -1,4 +1,4 @@
-# **🎬 PolarSE **
+# **🎬 PolarSE**
 
 Benvenuto nel progetto di ricerca di film e serie TV, sviluppato come parte del corso di **Gestione dell'Informazione (Information Retrieval)** per l'anno accademico 2024/2025! 
 
