@@ -73,7 +73,6 @@ def setup():
     time.sleep(3)  # Attendi 3 secondi prima di pulire la console
 
 # Chiamata dei 3 IR (in base al valore della scelta)
-search = [postgres,pylucene,whoosh,uscita]  # lista degli IR: è lui a chiamare le funzioni
 
 PATH = "Dataset"
 def postgres():
@@ -91,6 +90,8 @@ def uscita():
     time.sleep(1) 
     os.system('cls' if os.name == 'nt' else 'clear')  # Pulisce la console
     exit() 
+
+search = [postgres,pylucene,whoosh,uscita]  # lista degli IR: è lui a chiamare le funzioni
 
 # Funzione main
 def main():
