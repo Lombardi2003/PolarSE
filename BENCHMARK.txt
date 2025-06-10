@@ -56,7 +56,7 @@ FASE 4) Calcolo delle Metriche di performance (con k=5).
 Per valutare i singoli motori, abbiamo confrontato i 10 risultati restituiti con quelli contenuti nel Gold Standard e abbiamo usato sempre k = 5:
 
 • Precision@5: fra i primi 5 risultati, quanti sono nel Gold Standard?
-• Recall@5: fra i primi 5 recuperati dai motori, quanti coprono il gold (|relevant|)?
+• Recall@5: fra tutti i documenti rilevanti, quanti sono nei primi 5?
 • F1@5: media armonica di P@5 e R@5.
 • Average Precision: media delle Precision@i sui posizionamenti in cui compaiono documenti rilevanti.
 • Mean Average Precision (MAP): media delle AP sulle 10 query.
