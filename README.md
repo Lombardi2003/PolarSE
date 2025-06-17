@@ -7,10 +7,11 @@ Questo motore di ricerca consente di esplorare una vasta libreria di film e seri
 ---
 
 ## 🧑‍💻 **Creato da:**
-- **Checola Francesca Rosa (MATR. 180957 -- 324595@studenti.unimore.it)**
-- **Cocciardi Daniele Silvestro (MATR. 142029 -- 275438@studenti.unimore.it)**
-- **Gnaccarini Susanna (MATR. 184144 -- 326451@studenti.unimore.it)** 
-- **Lombardi Daniele (MATR. 180850 -- 324683@studenti.unimore.it)**
+- **Checola Francesca Rosa** [![GitHub: FrancescaPink](https://img.shields.io/badge/GitHub-FrancescaPink-ff69b4?style=flat&logo=github&logoColor=white)](https://github.com/FrancescaPink)
+- **Cocciardi Daniele Silvestro** [![GitHub: dcocciardi](https://img.shields.io/badge/GitHub-dcocciardi-2ea44f?style=flat&logo=github&logoColor=white)](https://github.com/dcocciardi)
+- **Gnaccarini Susanna** [![GitHub: susxnnv](https://img.shields.io/badge/GitHub-susxnnv-ff6f00?style=flat&logo=github&logoColor=white)](https://github.com/susxnnv)
+- **Lombardi Daniele** [![GitHub: Lombardi2003](https://img.shields.io/badge/GitHub-Lombardi2003-1da1f2?style=flat&logo=github&logoColor=white)](https://github.com/Lombardi2003)
+
 
 ---
 
